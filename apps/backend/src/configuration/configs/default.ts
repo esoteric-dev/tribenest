@@ -8,6 +8,7 @@ import {
   DATABASE_USER,
   DATABASE_PASSWORD,
   DATABASE_NAME,
+  IS_PRODUCTION,
   R2_BUCKET_URL,
   R2_URL,
   R2_BUCKET_NAME,
@@ -53,6 +54,7 @@ const config: Partial<IConfig> = {
     password: DATABASE_PASSWORD,
     database: DATABASE_NAME,
     max: 10,
+    ssl: IS_PRODUCTION ? { rejectUnauthorized: false } : false,
   },
   s3: {
     accessKeyId: R2_ACCESS_KEY_ID,

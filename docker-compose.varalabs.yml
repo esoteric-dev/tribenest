@@ -1,0 +1,56 @@
+version: "3.8"
+
+# Production compose for varalabs.systems
+# - Frontend : Cloudflare Pages (not in this stack)
+# - Database : Azure PostgreSQL (openstream-db.postgres.database.azure.com)
+# - Redis    : standalone container on VM host  → vm-setup-redis.sh
+# - MinIO    : standalone container on VM host  → vm-setup-minio.sh
+# - Exposed  : Cloudflare Tunnel (api / admin / assets / media subdomains)
+
+services:
+  tribenest-app:
+    image: ghcr.io/drenathan/tribenest:latest
+    container_name: tribenest-app
+    restart: unless-stopped
+    ports:
+      # Nginx inside the container listens on 80.
+      # cloudflared on the host forwards all subdomains here.
+      - "80:80"
+    extra_hosts:
+      # Lets the container reach services running on the VM host
+      - "host.docker.internal:host-gateway"
+    environment:
+      - NODE_ENV=production
+      - PORT=8000
+
+      # ── Azure PostgreSQL ──────────────────────────────────────────────────
+      - DATABASE_HOST=openstream-db.postgres.database.azure.com
+      - DATABASE_PORT=5432
+      - DATABASE_USER=dbuser
+      - DATABASE_PASSWORD=Test@12345678
+      - DATABASE_NAME=postgres
+
+      # ── Redis (running on VM host via vm-setup-redis.sh) ─────────────────
+      - REDIS_URL=redis://:VaraRedis@12345678@host.docker.internal:6379
+
+      # ── JWT ──────────────────────────────────────────────────────────────
+      - JWT_SECRET=${JWT_SECRET}
+      - ACCESSTOKENTTL=1h
+
+      # ── Domains ──────────────────────────────────────────────────────────
+      - ROOT_DOMAIN=varalabs.systems
+      - API_URL=https://api.varalabs.systems
+      - ADMIN_URL=https://admin.varalabs.systems
+
+      # ── MinIO (running on VM host via vm-setup-minio.sh) ─────────────────
+      - MINIO_ACCESS_KEY=varalabs
+      - MINIO_SECRET_KEY=VaraMinio@12345678
+      - MINIO_BUCKET=tribenest
+      - MINIO_URL=https://assets.varalabs.systems
+      - MINIO_REGION=us-east-1
+      - MINIO_BUCKET_URL=https://assets.varalabs.systems/tribenest
+
+      # ── LiveKit (fill in when you set up LiveKit) ─────────────────────────
+      - LIVEKIT_URL=${LIVEKIT_URL:-}
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY:-}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET:-}
