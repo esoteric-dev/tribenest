@@ -20,8 +20,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.rewrite(new URL(`/s/${subdomain}${pathname}`, request.url));
   }
 
-  // On the root domain, allow normal access
-  return NextResponse.rewrite(new URL(`/s/default-site${pathname}`, request.url));
+  // Root domain — render the landing page
+  return NextResponse.next();
 }
 
 export const config = {
