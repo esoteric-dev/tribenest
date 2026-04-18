@@ -48,6 +48,7 @@ import { StreamTemplateChannelModel } from "./stream/streamTemplateChannel.model
 import { StreamBroadcastModel } from "./stream/streamBroadcast.model";
 import { StreamBroadcastChannelModel } from "./stream/streamBroadcastChannel.model";
 import { StreamBroadcastCommentModel } from "./stream/streamBroadcastComment.model";
+import { ScheduledStreamModel } from "./stream/scheduledStream.model";
 import { WebsiteVersionModel } from "./website/websiteVersion.model";
 import { WebsiteVersionPageModel } from "./website/websiteVersionPage.model";
 import { WebsiteMessageModel } from "./website/websiteMessage.model";
@@ -103,6 +104,7 @@ export const bootstrapModels = (client: Kysely<DB>) => {
     StreamBroadcast: new StreamBroadcastModel(client),
     StreamBroadcastChannel: new StreamBroadcastChannelModel(client),
     StreamBroadcastComment: new StreamBroadcastCommentModel(client),
+    ScheduledStream: new ScheduledStreamModel(client),
     WebsiteVersion: new WebsiteVersionModel(client),
     WebsiteVersionPage: new WebsiteVersionPageModel(client),
     WebsiteMessage: new WebsiteMessageModel(client),

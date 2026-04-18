@@ -6,6 +6,7 @@ import { PostService } from "./posts";
 import { ProductService } from "./product";
 import { SmartLinkService } from "./smartLink";
 import { StreamsService } from "./stream";
+import { ScheduledStreamService } from "./scheduledStream";
 
 export class AdminService extends BaseService {
   public readonly posts: PostService;
@@ -15,6 +16,7 @@ export class AdminService extends BaseService {
   public readonly emails: EmailService;
   public readonly event: EventService;
   public readonly streams: StreamsService;
+  public readonly scheduledStreams: ScheduledStreamService;
 
   constructor(args: BaseServiceArgs) {
     super(args);
@@ -25,5 +27,6 @@ export class AdminService extends BaseService {
     this.emails = new EmailService(args);
     this.event = new EventService(args);
     this.streams = new StreamsService(args);
+    this.scheduledStreams = new ScheduledStreamService(args);
   }
 }

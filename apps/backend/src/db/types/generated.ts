@@ -589,6 +589,18 @@ export interface StreamBroadcastComments {
   updatedAt: Generated<Timestamp>;
 }
 
+export interface ScheduledStreams {
+  id: Generated<string>;
+  profileId: string;
+  title: string;
+  videoUrl: string;
+  videoFilename: string;
+  scheduledAt: Timestamp;
+  status: string;
+  createdAt: Generated<Timestamp>;
+  updatedAt: Generated<Timestamp>;
+}
+
 export interface StreamBroadcasts {
   createdAt: Generated<Timestamp>;
   egressId: string | null;
@@ -730,6 +742,7 @@ export interface DB {
   sessions: Sessions;
   smartLinkEvents: SmartLinkEvents;
   smartLinks: SmartLinks;
+  scheduledStreams: ScheduledStreams;
   streamBroadcastChannels: StreamBroadcastChannels;
   streamBroadcastComments: StreamBroadcastComments;
   streamBroadcasts: StreamBroadcasts;

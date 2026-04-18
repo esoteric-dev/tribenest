@@ -8,6 +8,7 @@ import SyncExternalProductsJob from "./products/SyncExternalProducts";
 import ResendDigitalDeliveryJob from "./order/resendDigitalDelivery";
 import ProcessTicketOrderJob from "./order/processTicketOrder";
 import FetchCommentsJob from "./broadcast/fetchComments";
+import ActivateScheduledStreamsJob from "./scheduledStream/ActivateScheduledStreams";
 
 export const bootstrapJobs = (queue: Queue, services: Services, database: Database) => {
   return {
@@ -25,6 +26,9 @@ export const bootstrapJobs = (queue: Queue, services: Services, database: Databa
     },
     broadcast: {
       fetchComments: new FetchCommentsJob(queue, services, database),
+    },
+    scheduledStream: {
+      activate: new ActivateScheduledStreamsJob(queue, services, database),
     },
   };
 };

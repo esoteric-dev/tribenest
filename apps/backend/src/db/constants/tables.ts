@@ -59,4 +59,5 @@ export const tables = {
   website_version_pages: "website_version_pages",
   website_messages: "website_messages",
   website_events: "website_events",
+  scheduled_streams: "scheduled_streams",
 };
