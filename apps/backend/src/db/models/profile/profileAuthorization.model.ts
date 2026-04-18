@@ -18,7 +18,7 @@ export class ProfileAuthorizationModel extends BaseModel<"profileAuthorizations"
           eb
             .selectFrom("profiles as p")
             .fullJoin("profileConfigurations as pc", "pc.profileId", "p.id")
-            .select(["p.name", "p.id", "pc.paymentProviderPublicKey"])
+            .select(["p.name", "p.id", "p.subdomain", "pc.paymentProviderPublicKey"])
             .whereRef("p.id", "=", "pa.profileId"),
         ).as("profile"),
       ])
