@@ -63,7 +63,7 @@ export class ScheduledStreamService extends BaseService {
   }
 
   private async pushToChannels(profileId: string, videoUrl: string, title: string) {
-    const channels = await this.models.StreamChannel.findMany({ profileId } as any);
+    const channels = await this.models.StreamChannel.find({ profileId } as any);
     if (!channels || channels.length === 0) return;
 
     for (const channel of channels) {
