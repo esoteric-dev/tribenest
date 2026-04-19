@@ -14,7 +14,18 @@ export async function GET(request: NextRequest) {
   const isMultiTenant = process.env.MULTI_TENANT === "true";
 
   if (isMultiTenant && !subdomain) {
-    return NextResponse.json({});
+    return NextResponse.json(
+      {
+        name: "Varalabs Creator Portal",
+        short_name: "Varalabs",
+        start_url: "/",
+        display: "standalone",
+        background_color: "#0a0a0a",
+        theme_color: "#f97316",
+        icons: [],
+      },
+      { headers: { "Content-Type": "application/manifest+json" } },
+    );
   }
 
   const response = await fetch(
