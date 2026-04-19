@@ -1,108 +1,95 @@
 "use client";
 import { useEditorContext } from "@tribe-nest/frontend-shared";
 import InternalPageRenderer from "../../_components/internal-page-renderer";
-import { useQuery } from "@tanstack/react-query";
-import { ILiveBroadcast } from "./types";
-import { formatDateTime } from "@tribe-nest/frontend-shared";
-import { Play, Calendar } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useRef } from "react";
 
-type ScheduledStream = {
+type PlaylistItem = {
+  id: string;
+  playlist_id: string;
+  title: string;
+  video_url: string;
+  position: number;
+};
+
+type LivePlaylist = {
   id: string;
   title: string;
-  videoUrl: string;
-  scheduledAt: string;
-  status: "pending" | "live" | "ended";
+  status: "live" | "paused" | "idle" | "ended";
+  repeatCount: number | null;
+  currentRepeat: number;
+  currentVideoIndex: number;
+  currentVideoStartedAt: string | null;
+  currentItem: PlaylistItem | null;
+  items: PlaylistItem[];
+  totalVideos: number;
 };
 
 export function LiveBroadcastsContent() {
-  const { profile, httpClient, navigate, themeSettings } = useEditorContext();
+  const { profile, httpClient, themeSettings } = useEditorContext();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const queryClient = useQueryClient();
 
-  const { data: liveScheduledStream } = useQuery<ScheduledStream | null>({
-    queryKey: ["live-scheduled-stream", profile?.id],
+  const { data: livePlaylist } = useQuery<LivePlaylist | null>({
+    queryKey: ["live-playlist", profile?.id],
     queryFn: async () => {
-      const res = await httpClient!.get("/public/scheduled-streams/live", {
+      const res = await httpClient!.get("/public/stream-playlists/live", {
         params: { profileId: profile?.id },
       });
       return res.data ?? null;
     },
     enabled: !!profile?.id && !!httpClient,
-    refetchInterval: 30000,
+    refetchInterval: 10000,
   });
 
-  const {
-    data: broadcasts,
-    isLoading: broadcastsLoading,
-    error,
-  } = useQuery<ILiveBroadcast[]>({
-    queryKey: ["live-broadcasts", profile?.id],
-    queryFn: async () => {
-      const res = await httpClient!.get("/public/broadcasts", {
-        params: { profileId: profile?.id },
+  const current = livePlaylist?.currentItem ?? null;
+
+  // When video ends, tell server to advance and refresh
+  const handleEnded = useCallback(async () => {
+    if (!livePlaylist || !httpClient) return;
+    const expectedIndex = livePlaylist.currentVideoIndex;
+    try {
+      await httpClient.post(`/public/stream-playlists/${livePlaylist.id}/advance`, {
+        expectedIndex,
       });
-      return res.data;
-    },
-    enabled: !!profile?.id && !!httpClient,
-  });
+    } catch { /* ignore */ }
+    // Immediately refetch to get new state
+    queryClient.invalidateQueries({ queryKey: ["live-playlist", profile?.id] });
+  }, [livePlaylist, httpClient, profile?.id, queryClient]);
 
-  const handleBroadcastClick = (broadcastId: string) => {
-    navigate(`/live/${broadcastId}`);
-  };
+  // Auto-play when current item changes
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || !current) return;
+    v.load();
+    v.play().catch(() => {});
+  }, [current?.id]);
 
-  const getBroadcastStatus = (broadcast: ILiveBroadcast) => {
-    if (broadcast.startedAt && !broadcast.endedAt) {
-      return { text: "LIVE", className: "bg-red-500 text-white" };
-    }
-
-    const now = new Date();
-
-    if (broadcast.startDate && new Date(broadcast.startDate) > now) {
-      return { text: "UPCOMING", className: "bg-blue-500 text-white" };
-    }
-    return { text: "ENDED", className: "bg-gray-500 text-white" };
-  };
-
-  if (broadcastsLoading) {
+  if (!livePlaylist || livePlaylist.status !== "live" || !current) {
     return (
       <InternalPageRenderer pagePathname="/live">
-        <div className="flex items-center justify-center min-h-[400px]" style={{ color: themeSettings.colors.text }}>
-          <div
-            className="animate-spin rounded-full h-8 w-8 border-b-2"
-            style={{ borderColor: themeSettings.colors.primary }}
-          ></div>
-        </div>
-      </InternalPageRenderer>
-    );
-  }
-
-  if (error) {
-    return (
-      <InternalPageRenderer pagePathname="/live">
-        <div className="flex items-center justify-center min-h-[400px]" style={{ color: themeSettings.colors.text }}>
+        <div
+          className="flex items-center justify-center min-h-[400px]"
+          style={{ color: themeSettings.colors.text }}
+        >
           <div className="text-center">
+            <div className="text-4xl mb-4">📡</div>
             <h3 className="text-lg font-semibold mb-2" style={{ color: themeSettings.colors.text }}>
-              Error Loading Broadcasts
+              No Live Stream
             </h3>
-            <p style={{ color: themeSettings.colors.text }}>Unable to load live broadcasts at this time.</p>
+            <p style={{ color: themeSettings.colors.text, opacity: 0.6 }}>
+              {livePlaylist?.status === "paused"
+                ? "Stream is paused. Check back soon."
+                : "No stream is live right now. Check back later."}
+            </p>
           </div>
         </div>
       </InternalPageRenderer>
     );
   }
 
-  if (!liveScheduledStream && (!broadcasts || broadcasts.length === 0)) {
-    return (
-      <InternalPageRenderer pagePathname="/live">
-        <div className="flex items-center justify-center min-h-[400px]" style={{ color: themeSettings.colors.text }}>
-          <div className="text-center">
-            <h3 className="text-lg font-semibold mb-2" style={{ color: themeSettings.colors.text }}>
-              No Live Broadcasts
-            </h3>
-            <p style={{ color: themeSettings.colors.text }}>There are currently no live broadcasts available.</p>
-          </div>
-        </div>
-      </InternalPageRenderer>
-    );
-  }
+  const items = livePlaylist.items ?? [];
+  const currentIdx = livePlaylist.currentVideoIndex;
 
   return (
     <InternalPageRenderer pagePathname="/live">
@@ -114,113 +101,92 @@ export function LiveBroadcastsContent() {
           fontFamily: themeSettings.fontFamily,
         }}
       >
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-5xl mx-auto">
+          {/* Live badge + title */}
+          <div className="flex items-center gap-3 mb-4">
+            <span className="px-2 py-1 rounded-full bg-red-500 text-white text-xs font-bold animate-pulse">
+              ● LIVE
+            </span>
+            <h2 className="text-xl font-bold" style={{ color: themeSettings.colors.text }}>
+              {current.title}
+            </h2>
+          </div>
 
-          {/* Scheduled simulive stream — shown when a video is live */}
-          {liveScheduledStream && (
-            <div className="mb-10">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="px-2 py-1 rounded-full bg-red-500 text-white text-xs font-bold animate-pulse">● LIVE</span>
-                <h2 className="text-xl font-bold" style={{ color: themeSettings.colors.text }}>
-                  {liveScheduledStream.title}
-                </h2>
-              </div>
-              <div
-                className="overflow-hidden"
-                style={{
-                  borderRadius: `${themeSettings.cornerRadius}px`,
-                  border: `1px solid ${themeSettings.colors.primary}40`,
-                  background: "#000",
-                }}
+          {/* Video player */}
+          <div
+            className="overflow-hidden mb-6"
+            style={{
+              borderRadius: `${themeSettings.cornerRadius}px`,
+              border: `1px solid ${themeSettings.colors.primary}40`,
+              background: "#000",
+            }}
+          >
+            <video
+              ref={videoRef}
+              key={current.id}
+              src={current.video_url}
+              controls
+              autoPlay
+              playsInline
+              onEnded={handleEnded}
+              style={{ width: "100%", maxHeight: "70vh", display: "block" }}
+            />
+          </div>
+
+          {/* Playlist — only show if more than one video */}
+          {items.length > 1 && (
+            <div>
+              <h3
+                className="text-sm font-semibold uppercase tracking-wide mb-3"
+                style={{ color: themeSettings.colors.text, opacity: 0.5 }}
               >
-                <video
-                  src={liveScheduledStream.videoUrl}
-                  controls
-                  autoPlay
-                  playsInline
-                  style={{ width: "100%", maxHeight: "70vh", display: "block" }}
-                />
+                Up next
+              </h3>
+              <div className="flex flex-col gap-2">
+                {items.map((item, idx) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg"
+                    style={{
+                      background: idx === currentIdx
+                        ? `${themeSettings.colors.primary}20`
+                        : "transparent",
+                      border: `1px solid ${idx === currentIdx ? themeSettings.colors.primary + "60" : "transparent"}`,
+                      borderRadius: `${themeSettings.cornerRadius}px`,
+                    }}
+                  >
+                    <span
+                      className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+                      style={{
+                        background: idx === currentIdx ? themeSettings.colors.primary : `${themeSettings.colors.primary}20`,
+                        color: idx === currentIdx ? "#fff" : themeSettings.colors.text,
+                      }}
+                    >
+                      {idx === currentIdx ? "▶" : idx + 1}
+                    </span>
+                    <span
+                      className="text-sm font-medium truncate flex-1"
+                      style={{ color: themeSettings.colors.text }}
+                    >
+                      {item.title}
+                    </span>
+                    {idx === currentIdx && (
+                      <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-red-500 text-white font-medium flex-shrink-0">
+                        Now playing
+                      </span>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
-          {broadcasts && broadcasts.length > 0 && (
-            <>
-              <div className="mb-8">
-                <h1
-                  className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2"
-                  style={{ color: themeSettings.colors.text }}
-                >
-                  Live Broadcasts
-                </h1>
-                <p style={{ color: themeSettings.colors.text }}>Watch live streams and events</p>
-              </div>
-                  <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {broadcasts.map((broadcast) => {
-              const status = getBroadcastStatus(broadcast);
-
-              return (
-                <div
-                  key={broadcast.id}
-                  onClick={() => handleBroadcastClick(broadcast.id)}
-                  className="group cursor-pointer overflow-hidden transition-all duration-200 hover:scale-102"
-                  style={{
-                    backgroundColor: themeSettings.colors.background,
-                    borderRadius: `${themeSettings.cornerRadius}px`,
-                    boxShadow: `0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)`,
-                    border: `1px solid ${themeSettings.colors.primary}30`,
-                  }}
-                >
-                  <div className="relative">
-                    <div
-                      className="aspect-video flex items-center justify-center relative"
-                      style={{
-                        background: `linear-gradient(135deg, ${themeSettings.colors.primary}20, ${themeSettings.colors.primary}10)`,
-                      }}
-                    >
-                      {(broadcast.thumbnailUrl || broadcast.generatedThumbnailUrl) && (
-                        <img
-                          src={broadcast.thumbnailUrl || broadcast.generatedThumbnailUrl}
-                          alt={broadcast.title}
-                          className="w-full h-full object-cover absolute top-0 left-0"
-                        />
-                      )}
-                      <Play
-                        className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 transition-colors group-hover:scale-110 z-10"
-                        style={{ color: themeSettings.colors.primary }}
-                      />
-                    </div>
-                    <div
-                      className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-semibold ${status.className}`}
-                    >
-                      {status.text}
-                    </div>
-                  </div>
-
-                  <div className="p-3 sm:p-4">
-                    <h3
-                      className="font-semibold mb-2 line-clamp-2 transition-colors group-hover:opacity-80"
-                      style={{ color: themeSettings.colors.text }}
-                    >
-                      {broadcast.title}
-                    </h3>
-
-                    <div className="flex items-center text-sm space-x-2">
-                      {broadcast.startDate && (
-                        <div className="flex items-center" style={{ color: themeSettings.colors.text }}>
-                          <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                          <span className="text-xs sm:text-sm">{formatDateTime(broadcast.startDate)}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-              </div>
-            </>
+          {/* Repeat info */}
+          {livePlaylist.repeatCount !== null && (
+            <p className="text-xs mt-4" style={{ color: themeSettings.colors.text, opacity: 0.3 }}>
+              Loop {livePlaylist.currentRepeat + 1} of {livePlaylist.repeatCount}
+            </p>
           )}
-
         </div>
       </div>
     </InternalPageRenderer>

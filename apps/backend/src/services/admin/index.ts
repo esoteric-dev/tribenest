@@ -7,6 +7,7 @@ import { ProductService } from "./product";
 import { SmartLinkService } from "./smartLink";
 import { StreamsService } from "./stream";
 import { ScheduledStreamService } from "./scheduledStream";
+import { StreamPlaylistService } from "./streamPlaylist";
 
 export class AdminService extends BaseService {
   public readonly posts: PostService;
@@ -17,6 +18,7 @@ export class AdminService extends BaseService {
   public readonly event: EventService;
   public readonly streams: StreamsService;
   public readonly scheduledStreams: ScheduledStreamService;
+  public readonly streamPlaylist: StreamPlaylistService;
 
   constructor(args: BaseServiceArgs) {
     super(args);
@@ -28,5 +30,6 @@ export class AdminService extends BaseService {
     this.event = new EventService(args);
     this.streams = new StreamsService(args);
     this.scheduledStreams = new ScheduledStreamService(args);
+    this.streamPlaylist = new StreamPlaylistService(args);
   }
 }

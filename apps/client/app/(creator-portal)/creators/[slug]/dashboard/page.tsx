@@ -8,13 +8,25 @@ import { useCreatorAuth } from "../../../../_contexts/creator-auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-type ScheduledStream = {
+type PlaylistVideo = {
+  id: string;
+  playlist_id: string;
+  title: string;
+  video_url: string;
+  video_filename: string;
+  position: number;
+};
+
+type StreamPlaylist = {
   id: string;
   title: string;
-  videoFilename: string;
-  videoUrl: string;
-  scheduledAt: string;
-  status: "pending" | "live" | "ended";
+  status: "idle" | "live" | "paused" | "ended";
+  repeat_count: number | null;
+  current_repeat: number;
+  current_video_index: number;
+  scheduled_start_at: string | null;
+  scheduled_end_at: string | null;
+  items: PlaylistVideo[];
 };
 
 export default function CreatorDashboard({ params }: { params: Promise<{ slug: string }> }) {
@@ -73,27 +85,25 @@ export default function CreatorDashboard({ params }: { params: Promise<{ slug: s
 
         <section className="mb-10">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Stream Scheduler</h2>
+            <h2 className="text-xl font-semibold">Stream Playlists</h2>
             {profile && token && (
-              <ScheduleButton profileId={profile.id} token={token} />
+              <CreatePlaylistButton profileId={profile.id} token={token} />
             )}
           </div>
-          {/* Where it streams callout */}
           <div className="mb-4 px-4 py-3 rounded-lg bg-white/[0.03] border border-white/5 flex items-start gap-3">
             <span className="text-lg mt-0.5">📡</span>
             <div>
-              <p className="text-sm text-white/70 font-medium">Where do scheduled videos stream?</p>
+              <p className="text-sm text-white/70 font-medium">Multi-video 24/7 streams</p>
               <p className="text-xs text-white/40 mt-0.5">
-                Scheduled videos play automatically on your live page at{" "}
+                Create playlists with multiple videos that play one after another in a continuous loop. Schedule start/end times and set repetitions. Stream at{" "}
                 <a href={`https://${slug}.${rootDomain}/live`} target="_blank" rel="noreferrer"
                   className="text-orange-400 hover:text-orange-300">
                   {slug}.{rootDomain}/live
                 </a>
-                {" "}at the scheduled time. Viewers can watch directly in the browser — no app needed.
               </p>
             </div>
           </div>
-          {profile && token && <ScheduledStreamsList profileId={profile.id} token={token} />}
+          {profile && token && <PlaylistsList profileId={profile.id} token={token} />}
         </section>
 
         {profile && token && (
@@ -124,129 +134,75 @@ export default function CreatorDashboard({ params }: { params: Promise<{ slug: s
   );
 }
 
-/* ── Stream scheduler ─────────────────────────────── */
+/* ── Stream Playlists ─────────────────────────────── */
 
-function ScheduleButton({ profileId, token }: { profileId: string; token: string }) {
+function CreatePlaylistButton({ profileId, token }: { profileId: string; token: string }) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [scheduledAt, setScheduledAt] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [repeatCount, setRepeatCount] = useState("");
+  const [scheduledStartAt, setScheduledStartAt] = useState("");
+  const [scheduledEndAt, setScheduledEndAt] = useState("");
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [, forceRefresh] = useState(0);
 
-  const apiClient = axios.create({
-    baseURL: API_URL,
-    headers: { authorization: `Bearer ${token}` },
-  });
+  const apiClient = axios.create({ baseURL: API_URL, headers: { authorization: `Bearer ${token}` } });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !title || !scheduledAt) return;
-    setUploading(true);
-    setError("");
-
+    setSaving(true); setError("");
     try {
-      // Step 1: get presigned URL
-      const { data: { presignedUrl, remoteUrl } } = await apiClient.post("/scheduled-streams/presigned-url", {
-        profileId,
-        filename: file.name,
-      });
-
-      // Step 2: upload video directly to MinIO
-      await axios.put(presignedUrl, file, {
-        headers: { "Content-Type": file.type || "video/mp4" },
-        onUploadProgress: (e) => {
-          if (e.total) setUploadProgress(Math.round((e.loaded * 100) / e.total));
-        },
-      });
-
-      // Step 3: create scheduled stream record
-      await apiClient.post("/scheduled-streams", {
+      await apiClient.post("/stream-playlists", {
         profileId,
         title,
-        videoFilename: file.name,
-        videoUrl: remoteUrl,
-        scheduledAt: new Date(scheduledAt).toISOString(),
+        repeatCount: repeatCount ? parseInt(repeatCount) : null,
+        scheduledStartAt: scheduledStartAt || null,
+        scheduledEndAt: scheduledEndAt || null,
       });
-
-      setTitle(""); setFile(null); setScheduledAt(""); setOpen(false); setUploadProgress(0);
-      forceRefresh((n) => n + 1);
+      setTitle(""); setRepeatCount(""); setScheduledStartAt(""); setScheduledEndAt("");
+      setOpen(false);
+      window.dispatchEvent(new CustomEvent("playlists-updated"));
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? "Upload failed. Please try again.");
-    } finally {
-      setUploading(false);
-    }
+      setError(err?.response?.data?.message ?? "Failed to create playlist.");
+    } finally { setSaving(false); }
   };
 
-  if (!open) {
-    return (
-      <button onClick={() => setOpen(true)}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-400 text-white text-sm font-semibold transition-colors">
-        + Schedule stream
-      </button>
-    );
-  }
+  if (!open) return (
+    <button onClick={() => setOpen(true)}
+      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-400 text-white text-sm font-semibold transition-colors">
+      + New playlist
+    </button>
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
       <div className="w-full max-w-md bg-[#111] border border-white/10 rounded-xl p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold">Schedule a stream</h3>
-          <button onClick={() => { setOpen(false); setError(""); }} className="text-white/40 hover:text-white text-xl leading-none">×</button>
+          <h3 className="text-lg font-semibold">Create stream playlist</h3>
+          <button onClick={() => { setOpen(false); setError(""); }} className="text-white/40 hover:text-white text-xl">×</button>
         </div>
-
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {error && <div className="px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>}
-
-          <ModalField label="Stream title">
-            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Episode 3 — Deep Dive"
-              required className={modalInputClass} />
+          <ModalField label="Playlist name">
+            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Weekend Show" required className={modalInputClass} />
           </ModalField>
-
-          <ModalField label="Video file">
-            <div onClick={() => !uploading && fileRef.current?.click()}
-              className="flex flex-col items-center justify-center gap-2 py-8 rounded-lg border-2 border-dashed border-white/10 hover:border-orange-500/40 cursor-pointer transition-colors text-center">
-              {uploading ? (
-                <>
-                  <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden mx-4 max-w-xs">
-                    <div className="h-full bg-orange-500 transition-all" style={{ width: `${uploadProgress}%` }} />
-                  </div>
-                  <span className="text-sm text-white/50">Uploading… {uploadProgress}%</span>
-                </>
-              ) : file ? (
-                <>
-                  <span className="text-2xl">🎬</span>
-                  <span className="text-sm text-white/70">{file.name}</span>
-                  <span className="text-xs text-white/30">{(file.size / 1024 / 1024).toFixed(1)} MB</span>
-                </>
-              ) : (
-                <>
-                  <span className="text-2xl">📁</span>
-                  <span className="text-sm text-white/50">Click to select a video</span>
-                  <span className="text-xs text-white/25">MP4, MOV, MKV supported</span>
-                </>
-              )}
-            </div>
-            <input ref={fileRef} type="file" accept="video/*"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="hidden" />
+          <ModalField label="Repeat count (blank = infinite loop)">
+            <input type="number" min="1" value={repeatCount} onChange={(e) => setRepeatCount(e.target.value)}
+              placeholder="Leave blank to loop forever" className={modalInputClass} />
           </ModalField>
-
-          <ModalField label="Go live at">
-            <input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)}
-              required min={new Date().toISOString().slice(0, 16)} className={modalInputClass} />
+          <ModalField label="Schedule start (optional)">
+            <input type="datetime-local" value={scheduledStartAt} onChange={(e) => setScheduledStartAt(e.target.value)} className={modalInputClass} />
           </ModalField>
-
+          <ModalField label="Schedule end (optional)">
+            <input type="datetime-local" value={scheduledEndAt} onChange={(e) => setScheduledEndAt(e.target.value)} className={modalInputClass} />
+          </ModalField>
           <div className="flex gap-3 mt-2">
             <button type="button" onClick={() => { setOpen(false); setError(""); }}
               className="flex-1 py-3 rounded-lg border border-white/10 hover:border-white/30 text-white/60 hover:text-white text-sm font-semibold transition-colors">
               Cancel
             </button>
-            <button type="submit" disabled={uploading || !file}
+            <button type="submit" disabled={saving || !title}
               className="flex-1 py-3 rounded-lg bg-orange-500 hover:bg-orange-400 disabled:opacity-50 text-white font-semibold text-sm transition-colors">
-              {uploading ? "Uploading…" : "Schedule"}
+              {saving ? "Creating…" : "Create playlist"}
             </button>
           </div>
         </form>
@@ -255,73 +211,307 @@ function ScheduleButton({ profileId, token }: { profileId: string; token: string
   );
 }
 
-function ScheduledStreamsList({ profileId, token }: { profileId: string; token: string }) {
-  const [streams, setStreams] = useState<ScheduledStream[]>([]);
+function PlaylistsList({ profileId, token }: { profileId: string; token: string }) {
+  const [playlists, setPlaylists] = useState<StreamPlaylist[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const apiClient = axios.create({
+  const apiClient = useCallback(() => axios.create({
     baseURL: API_URL,
     headers: { authorization: `Bearer ${token}` },
-  });
+  }), [token]);
 
-  const fetchStreams = useCallback(async () => {
+  const fetchPlaylists = useCallback(async () => {
     try {
-      const { data } = await apiClient.get(`/scheduled-streams?profileId=${profileId}`);
-      setStreams(data);
+      const { data } = await apiClient().get(`/stream-playlists?profileId=${profileId}`);
+      setPlaylists(Array.isArray(data) ? data : []);
     } catch { /* ignore */ }
     finally { setLoading(false); }
   }, [profileId, token]);
 
-  useEffect(() => { fetchStreams(); }, [fetchStreams]);
+  useEffect(() => { fetchPlaylists(); }, [fetchPlaylists]);
 
-  const deleteStream = async (id: string) => {
-    await apiClient.delete(`/scheduled-streams/${id}?profileId=${profileId}`);
-    setStreams((prev) => prev.filter((s) => s.id !== id));
+  useEffect(() => {
+    const handler = () => fetchPlaylists();
+    window.addEventListener("playlists-updated", handler);
+    return () => window.removeEventListener("playlists-updated", handler);
+  }, [fetchPlaylists]);
+
+  const doAction = async (playlistId: string, action: string) => {
+    setActionLoading(playlistId + action);
+    try {
+      await apiClient().post(`/stream-playlists/${playlistId}/${action}?profileId=${profileId}`);
+      await fetchPlaylists();
+    } catch { /* ignore */ }
+    finally { setActionLoading(null); }
+  };
+
+  const deletePlaylist = async (id: string) => {
+    setActionLoading(id + "delete");
+    try {
+      await apiClient().delete(`/stream-playlists/${id}?profileId=${profileId}`);
+      setPlaylists((prev) => prev.filter((p) => p.id !== id));
+    } catch { /* ignore */ }
+    finally { setActionLoading(null); }
   };
 
   if (loading) return <div className="h-32 flex items-center justify-center text-white/30 text-sm">Loading…</div>;
 
+  if (playlists.length === 0) return (
+    <div className="rounded-xl border border-white/5 bg-white/[0.02] flex flex-col items-center justify-center py-16 text-center">
+      <span className="text-3xl mb-3">🎬</span>
+      <p className="text-white/40 text-sm">No playlists yet</p>
+      <p className="text-white/20 text-xs mt-1">Create a playlist, add videos, then hit Start to go live</p>
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col gap-4">
+      {playlists.map((pl) => (
+        <PlaylistCard
+          key={pl.id}
+          playlist={pl}
+          profileId={profileId}
+          token={token}
+          expanded={expandedId === pl.id}
+          onToggle={() => setExpandedId(expandedId === pl.id ? null : pl.id)}
+          onAction={doAction}
+          onDelete={() => deletePlaylist(pl.id)}
+          actionLoading={actionLoading}
+          onRefresh={fetchPlaylists}
+        />
+      ))}
+    </div>
+  );
+}
+
+function PlaylistCard({
+  playlist, profileId, token, expanded, onToggle, onAction, onDelete, actionLoading, onRefresh,
+}: {
+  playlist: StreamPlaylist; profileId: string; token: string;
+  expanded: boolean; onToggle: () => void;
+  onAction: (id: string, action: string) => void;
+  onDelete: () => void;
+  actionLoading: string | null;
+  onRefresh: () => void;
+}) {
+  const [addVideoOpen, setAddVideoOpen] = useState(false);
+  const [removingVideoId, setRemovingVideoId] = useState<string | null>(null);
+
+  const apiClient = useCallback(() => axios.create({
+    baseURL: API_URL,
+    headers: { authorization: `Bearer ${token}` },
+  }), [token]);
+
+  const removeVideo = async (videoId: string) => {
+    setRemovingVideoId(videoId);
+    try {
+      await apiClient().delete(`/stream-playlists/${playlist.id}/videos/${videoId}?profileId=${profileId}`);
+      onRefresh();
+    } catch { /* ignore */ }
+    finally { setRemovingVideoId(null); }
+  };
+
+  const isLive = playlist.status === "live";
+  const isPaused = playlist.status === "paused";
+  const isIdle = playlist.status === "idle";
+  const isEnded = playlist.status === "ended";
+
   return (
     <div className="rounded-xl border border-white/5 bg-white/[0.02] overflow-hidden">
-      <div className="px-4 py-3 border-b border-white/5 grid grid-cols-4 text-xs text-white/30 uppercase tracking-wide font-medium">
-        <span>Title</span><span>File</span><span>Scheduled for</span><span>Status</span>
+      {/* Header */}
+      <div className="px-4 py-3 flex items-center gap-3">
+        <button onClick={onToggle} className="flex-1 flex items-center gap-3 text-left">
+          <span className="text-sm font-semibold text-white/80 truncate">{playlist.title}</span>
+          <PlaylistStatusBadge status={playlist.status} />
+          <span className="text-xs text-white/30">{playlist.items?.length ?? 0} videos</span>
+          {playlist.repeat_count !== null && (
+            <span className="text-xs text-white/20">×{playlist.repeat_count}</span>
+          )}
+        </button>
+        {/* Controls */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {isIdle && (
+            <button onClick={() => onAction(playlist.id, "start")}
+              disabled={!!actionLoading}
+              className="px-3 py-1.5 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 text-xs font-semibold transition-colors disabled:opacity-50">
+              ▶ Start
+            </button>
+          )}
+          {isLive && (
+            <>
+              <button onClick={() => onAction(playlist.id, "pause")}
+                disabled={!!actionLoading}
+                className="px-3 py-1.5 rounded-lg bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 text-xs font-semibold transition-colors disabled:opacity-50">
+                ⏸ Pause
+              </button>
+              <button onClick={() => onAction(playlist.id, "stop")}
+                disabled={!!actionLoading}
+                className="px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 text-xs font-semibold transition-colors disabled:opacity-50">
+                ■ Stop
+              </button>
+            </>
+          )}
+          {isPaused && (
+            <>
+              <button onClick={() => onAction(playlist.id, "resume")}
+                disabled={!!actionLoading}
+                className="px-3 py-1.5 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 text-xs font-semibold transition-colors disabled:opacity-50">
+                ▶ Resume
+              </button>
+              <button onClick={() => onAction(playlist.id, "stop")}
+                disabled={!!actionLoading}
+                className="px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 text-xs font-semibold transition-colors disabled:opacity-50">
+                ■ Stop
+              </button>
+            </>
+          )}
+          {isEnded && (
+            <button onClick={() => onAction(playlist.id, "start")}
+              disabled={!!actionLoading}
+              className="px-3 py-1.5 rounded-lg bg-white/10 text-white/40 hover:bg-white/20 text-xs font-semibold transition-colors disabled:opacity-50">
+              ↺ Restart
+            </button>
+          )}
+          <button onClick={onDelete}
+            disabled={!!actionLoading}
+            className="px-2 py-1.5 text-white/20 hover:text-red-400 transition-colors text-xs disabled:opacity-50">
+            ✕
+          </button>
+          <button onClick={onToggle} className="text-white/30 hover:text-white transition-colors text-sm">
+            {expanded ? "▲" : "▼"}
+          </button>
+        </div>
       </div>
 
-      {streams.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <span className="text-3xl mb-3">📅</span>
-          <p className="text-white/40 text-sm">No streams scheduled yet</p>
-          <p className="text-white/20 text-xs mt-1">Click "Schedule stream" to upload a video and pick a time</p>
-        </div>
-      ) : (
-        streams.map((s) => (
-          <div key={s.id} className="px-4 py-3 border-b border-white/5 last:border-0 grid grid-cols-4 items-center text-sm">
-            <span className="text-white/80 truncate pr-2">{s.title}</span>
-            <span className="text-white/40 truncate pr-2 text-xs">{s.videoFilename}</span>
-            <span className="text-white/50 text-xs">{new Date(s.scheduledAt).toLocaleString()}</span>
-            <div className="flex items-center gap-3">
-              <StatusBadge status={s.status} />
-              {s.status !== "live" && (
-                <button onClick={() => deleteStream(s.id)}
-                  className="text-white/20 hover:text-red-400 transition-colors text-xs">delete</button>
-              )}
+      {/* Expanded video list */}
+      {expanded && (
+        <div className="border-t border-white/5">
+          {playlist.items?.length === 0 ? (
+            <div className="flex flex-col items-center py-8 text-center">
+              <p className="text-white/30 text-sm">No videos yet</p>
+              <p className="text-white/20 text-xs mt-1">Add videos to this playlist</p>
             </div>
+          ) : (
+            <div>
+              {playlist.items?.map((video, idx) => (
+                <div key={video.id}
+                  className={`px-4 py-3 border-b border-white/5 last:border-0 flex items-center gap-3 ${
+                    isLive && idx === playlist.current_video_index ? "bg-white/[0.03]" : ""
+                  }`}>
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-white/5 text-white/30 text-xs flex items-center justify-center font-medium">
+                    {isLive && idx === playlist.current_video_index ? "▶" : idx + 1}
+                  </span>
+                  <span className="text-sm text-white/70 truncate flex-1">{video.title}</span>
+                  {isLive && idx === playlist.current_video_index && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/20">Playing</span>
+                  )}
+                  <button onClick={() => removeVideo(video.id)}
+                    disabled={removingVideoId === video.id}
+                    className="text-white/20 hover:text-red-400 transition-colors text-xs disabled:opacity-50">
+                    {removingVideoId === video.id ? "…" : "remove"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="px-4 py-3 border-t border-white/5">
+            {addVideoOpen ? (
+              <AddVideoForm
+                playlistId={playlist.id}
+                profileId={profileId}
+                token={token}
+                onDone={() => { setAddVideoOpen(false); onRefresh(); }}
+                onCancel={() => setAddVideoOpen(false)}
+              />
+            ) : (
+              <button onClick={() => setAddVideoOpen(true)}
+                className="text-sm text-orange-400 hover:text-orange-300 transition-colors">
+                + Add video
+              </button>
+            )}
           </div>
-        ))
+        </div>
       )}
     </div>
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    pending: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-    live: "bg-green-500/10 text-green-400 border-green-500/20",
-    ended: "bg-white/5 text-white/30 border-white/10",
+function AddVideoForm({ playlistId, profileId, token, onDone, onCancel }: {
+  playlistId: string; profileId: string; token: string; onDone: () => void; onCancel: () => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const apiClient = axios.create({ baseURL: API_URL, headers: { authorization: `Bearer ${token}` } });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!file || !title) return;
+    setUploading(true); setError("");
+    try {
+      const { data: { presignedUrl, remoteUrl } } = await apiClient.post("/stream-playlists/presigned-url", {
+        profileId, filename: file.name,
+      });
+      await axios.put(presignedUrl, file, {
+        headers: { "Content-Type": file.type || "video/mp4" },
+        onUploadProgress: (evt) => { if (evt.total) setProgress(Math.round((evt.loaded * 100) / evt.total)); },
+      });
+      await apiClient.post(`/stream-playlists/${playlistId}/videos?profileId=${profileId}`, {
+        title, videoUrl: remoteUrl, videoFilename: file.name,
+      });
+      onDone();
+    } catch (err: any) {
+      setError(err?.response?.data?.message ?? "Upload failed.");
+    } finally { setUploading(false); }
   };
+
   return (
-    <span className={`px-2 py-0.5 rounded-full border text-xs font-medium ${map[status] ?? map.ended}`}>
-      {status === "live" ? "🔴 Live" : status === "pending" ? "Scheduled" : "Ended"}
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      {error && <p className="text-red-400 text-xs">{error}</p>}
+      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Video title" required
+        className={miniInputClass} />
+      <div onClick={() => !uploading && fileRef.current?.click()}
+        className="flex items-center justify-center gap-2 py-4 rounded-lg border border-dashed border-white/10 hover:border-orange-500/40 cursor-pointer transition-colors text-center">
+        {uploading ? (
+          <div className="flex flex-col items-center gap-1 w-full px-4">
+            <div className="w-full bg-white/10 rounded-full h-1.5"><div className="h-full bg-orange-500 transition-all" style={{ width: `${progress}%` }} /></div>
+            <span className="text-xs text-white/40">{progress}%</span>
+          </div>
+        ) : file ? (
+          <span className="text-xs text-white/50">{file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB)</span>
+        ) : (
+          <span className="text-xs text-white/30">Click to select video</span>
+        )}
+      </div>
+      <input ref={fileRef} type="file" accept="video/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="hidden" />
+      <div className="flex gap-2">
+        <button type="button" onClick={onCancel} className="flex-1 py-2 rounded-lg border border-white/10 text-white/40 text-xs hover:text-white transition-colors">Cancel</button>
+        <button type="submit" disabled={uploading || !file || !title}
+          className="flex-1 py-2 rounded-lg bg-orange-500 hover:bg-orange-400 disabled:opacity-50 text-white text-xs font-semibold transition-colors">
+          {uploading ? "Uploading…" : "Add video"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function PlaylistStatusBadge({ status }: { status: string }) {
+  const map: Record<string, string> = {
+    idle: "bg-white/5 text-white/30 border-white/10",
+    live: "bg-green-500/10 text-green-400 border-green-500/20",
+    paused: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+    ended: "bg-white/5 text-white/20 border-white/5",
+  };
+  const labels: Record<string, string> = { idle: "Idle", live: "🔴 Live", paused: "⏸ Paused", ended: "Ended" };
+  return (
+    <span className={`px-2 py-0.5 rounded-full border text-xs font-medium ${map[status] ?? map.idle}`}>
+      {labels[status] ?? status}
     </span>
   );
 }

@@ -23,15 +23,17 @@ export class ScheduledStreamService extends BaseService {
     title: string;
     videoFilename: string;
     videoUrl: string;
-    scheduledAt: string;
+    scheduledAt?: string;
   }) {
+    const scheduledAt = input.scheduledAt ? new Date(input.scheduledAt) : new Date();
+    const isNowOrPast = scheduledAt <= new Date();
     return this.models.ScheduledStream.create({
       profileId: input.profileId,
       title: input.title,
       videoUrl: input.videoUrl,
       videoFilename: input.videoFilename,
-      scheduledAt: new Date(input.scheduledAt),
-      status: "pending",
+      scheduledAt,
+      status: isNowOrPast ? "live" : "pending",
     });
   }
 
@@ -43,8 +45,11 @@ export class ScheduledStreamService extends BaseService {
     const stream = await this.models.ScheduledStream.findById(id);
     if (!stream) throw new NotFoundError("Scheduled stream not found");
     if (stream.profileId !== profileId) throw new UnauthorizedError("Not authorized");
-    if (stream.status === "live") throw new UnauthorizedError("Cannot delete a live stream");
     return this.models.ScheduledStream.findByIdAndDelete(id);
+  }
+
+  public async getPlaylist(profileId: string) {
+    return this.models.ScheduledStream.listPlaylistByProfile(profileId);
   }
 
   public async activateDueStreams() {

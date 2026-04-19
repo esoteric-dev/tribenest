@@ -9,6 +9,7 @@ import ResendDigitalDeliveryJob from "./order/resendDigitalDelivery";
 import ProcessTicketOrderJob from "./order/processTicketOrder";
 import FetchCommentsJob from "./broadcast/fetchComments";
 import ActivateScheduledStreamsJob from "./scheduledStream/ActivateScheduledStreams";
+import CheckStreamPlaylistsJob from "./streamPlaylist/CheckStreamPlaylists";
 
 export const bootstrapJobs = (queue: Queue, services: Services, database: Database) => {
   return {
@@ -29,6 +30,9 @@ export const bootstrapJobs = (queue: Queue, services: Services, database: Databa
     },
     scheduledStream: {
       activate: new ActivateScheduledStreamsJob(queue, services, database),
+    },
+    streamPlaylist: {
+      check: new CheckStreamPlaylistsJob(queue, services, database),
     },
   };
 };

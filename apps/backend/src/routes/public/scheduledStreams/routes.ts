@@ -8,6 +8,8 @@ const init: InitRouteFunction = ({ services, workers }) => {
 
   // Returns the currently live scheduled stream for a profile (no auth)
   router.get("/live", (...args) => controller.getLive(...args));
+  // Returns all non-ended streams for the profile (the playlist)
+  router.get("/playlist", (...args) => controller.getPlaylist(...args));
 
   return router;
 };

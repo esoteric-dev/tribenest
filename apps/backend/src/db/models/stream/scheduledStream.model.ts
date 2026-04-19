@@ -38,6 +38,16 @@ export class ScheduledStreamModel extends BaseModel<"scheduledStreams", "id"> {
       .executeTakeFirst();
   }
 
+  public async listPlaylistByProfile(profileId: string) {
+    return this.client
+      .selectFrom("scheduledStreams")
+      .where("profileId", "=", profileId)
+      .where("status", "!=", "ended")
+      .orderBy("scheduledAt", "asc")
+      .selectAll()
+      .execute();
+  }
+
   public async updateStatus(id: string, status: ScheduledStreamStatus) {
     return this.client
       .updateTable("scheduledStreams")

@@ -21,6 +21,8 @@ export default class S3Service {
       region,
       forcePathStyle: true, // Required for some S3-compatible services
       maxAttempts: 3, // Built-in retry logic
+      requestChecksumCalculation: "WHEN_REQUIRED", // Disable auto CRC32 for MinIO compatibility
+      responseChecksumValidation: "WHEN_REQUIRED",
     });
   }
 

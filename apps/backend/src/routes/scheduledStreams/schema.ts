@@ -6,7 +6,7 @@ export const createScheduledStreamSchema = z.object({
     title: z.string().min(1).max(200),
     videoFilename: z.string().min(1),
     videoUrl: z.string().url(),
-    scheduledAt: z.string().datetime(),
+    scheduledAt: z.string().datetime().optional(),
   }),
 });
 
