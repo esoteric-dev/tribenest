@@ -35,7 +35,7 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_ROOT_DOMAIN: process.env.ROOT_DOMAIN || "localhost:3001",
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "http://localhost:8000",
-    MULTI_TENANT: process.env.MULTI_TENANT || "false",
+    MULTI_TENANT: process.env.MULTI_TENANT || "true",
   },
 };
 
