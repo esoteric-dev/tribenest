@@ -6,8 +6,28 @@ import { ILiveBroadcast } from "./types";
 import { formatDateTime } from "@tribe-nest/frontend-shared";
 import { Play, Calendar } from "lucide-react";
 
+type ScheduledStream = {
+  id: string;
+  title: string;
+  videoUrl: string;
+  scheduledAt: string;
+  status: "pending" | "live" | "ended";
+};
+
 export function LiveBroadcastsContent() {
   const { profile, httpClient, navigate, themeSettings } = useEditorContext();
+
+  const { data: liveScheduledStream } = useQuery<ScheduledStream | null>({
+    queryKey: ["live-scheduled-stream", profile?.id],
+    queryFn: async () => {
+      const res = await httpClient!.get("/public/scheduled-streams/live", {
+        params: { profileId: profile?.id },
+      });
+      return res.data ?? null;
+    },
+    enabled: !!profile?.id && !!httpClient,
+    refetchInterval: 30000,
+  });
 
   const {
     data: broadcasts,
@@ -69,7 +89,7 @@ export function LiveBroadcastsContent() {
     );
   }
 
-  if (!broadcasts || broadcasts.length === 0) {
+  if (!liveScheduledStream && (!broadcasts || broadcasts.length === 0)) {
     return (
       <InternalPageRenderer pagePathname="/live">
         <div className="flex items-center justify-center min-h-[400px]" style={{ color: themeSettings.colors.text }}>
@@ -95,18 +115,48 @@ export function LiveBroadcastsContent() {
         }}
       >
         <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
-            <h1
-              className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2"
-              style={{ color: themeSettings.colors.text }}
-            >
-              Live Broadcasts
-            </h1>
-            <p style={{ color: themeSettings.colors.text }}>Watch live streams and events</p>
-          </div>
 
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {broadcasts.map((broadcast) => {
+          {/* Scheduled simulive stream — shown when a video is live */}
+          {liveScheduledStream && (
+            <div className="mb-10">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="px-2 py-1 rounded-full bg-red-500 text-white text-xs font-bold animate-pulse">● LIVE</span>
+                <h2 className="text-xl font-bold" style={{ color: themeSettings.colors.text }}>
+                  {liveScheduledStream.title}
+                </h2>
+              </div>
+              <div
+                className="overflow-hidden"
+                style={{
+                  borderRadius: `${themeSettings.cornerRadius}px`,
+                  border: `1px solid ${themeSettings.colors.primary}40`,
+                  background: "#000",
+                }}
+              >
+                <video
+                  src={liveScheduledStream.videoUrl}
+                  controls
+                  autoPlay
+                  playsInline
+                  style={{ width: "100%", maxHeight: "70vh", display: "block" }}
+                />
+              </div>
+            </div>
+          )}
+
+          {broadcasts && broadcasts.length > 0 && (
+            <>
+              <div className="mb-8">
+                <h1
+                  className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2"
+                  style={{ color: themeSettings.colors.text }}
+                >
+                  Live Broadcasts
+                </h1>
+                <p style={{ color: themeSettings.colors.text }}>Watch live streams and events</p>
+              </div>
+                  <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                {broadcasts.map((broadcast) => {
               const status = getBroadcastStatus(broadcast);
 
               return (
@@ -167,7 +217,10 @@ export function LiveBroadcastsContent() {
                 </div>
               );
             })}
-          </div>
+              </div>
+            </>
+          )}
+
         </div>
       </div>
     </InternalPageRenderer>
