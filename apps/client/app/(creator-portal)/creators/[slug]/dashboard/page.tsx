@@ -330,150 +330,314 @@ function StatusBadge({ status }: { status: string }) {
 
 type StreamChannel = {
   id: string;
-  name: string;
-  type: string;
-  rtmpUrl?: string;
-  streamKey?: string;
+  title: string;
+  channelProvider: "youtube" | "twitch" | "custom_rtmp";
+  currentEndpoint: string | null;
+  externalId: string | null;
+  brandingSettings: any;
 };
+
+const PLATFORMS = [
+  {
+    id: "youtube",
+    name: "YouTube",
+    icon: "▶",
+    color: "#FF0000",
+    bg: "bg-red-600",
+    description: "Stream to YouTube Live",
+    oauthSupported: true,
+    rtmpUrl: "rtmp://a.rtmp.youtube.com/live2",
+    rtmpPlaceholder: "rtmp://a.rtmp.youtube.com/live2",
+  },
+  {
+    id: "twitch",
+    name: "Twitch",
+    icon: "♟",
+    color: "#9146FF",
+    bg: "bg-purple-600",
+    description: "Stream to Twitch",
+    oauthSupported: true,
+    rtmpUrl: "rtmp://live.twitch.tv/app",
+    rtmpPlaceholder: "rtmp://live.twitch.tv/app",
+  },
+  {
+    id: "facebook",
+    name: "Facebook",
+    icon: "f",
+    color: "#1877F2",
+    bg: "bg-blue-600",
+    description: "Stream to Facebook Live",
+    oauthSupported: false,
+    rtmpUrl: "rtmps://live-api-s.facebook.com:443/rtmp",
+    rtmpPlaceholder: "rtmps://live-api-s.facebook.com:443/rtmp",
+  },
+  {
+    id: "tiktok",
+    name: "TikTok",
+    icon: "♪",
+    color: "#010101",
+    bg: "bg-black border border-white/10",
+    description: "Stream to TikTok Live",
+    oauthSupported: false,
+    rtmpUrl: "rtmp://push.tiktok.com/live",
+    rtmpPlaceholder: "rtmp://push.tiktok.com/live",
+  },
+  {
+    id: "instagram",
+    name: "Instagram",
+    icon: "◎",
+    color: "#E1306C",
+    bg: "bg-pink-600",
+    description: "Stream to Instagram Live",
+    oauthSupported: false,
+    rtmpUrl: "rtmps://live-upload.instagram.com:443/rtmp",
+    rtmpPlaceholder: "rtmps://live-upload.instagram.com:443/rtmp",
+  },
+  {
+    id: "custom",
+    name: "Custom RTMP",
+    icon: "⚡",
+    color: "#F97316",
+    bg: "bg-orange-500",
+    description: "Any RTMP destination",
+    oauthSupported: false,
+    rtmpUrl: "",
+    rtmpPlaceholder: "rtmp://your-server/live",
+  },
+] as const;
 
 function StreamChannels({ profileId, token, slug, rootDomain }: {
   profileId: string; token: string; slug: string; rootDomain: string;
 }) {
   const [channels, setChannels] = useState<StreamChannel[]>([]);
   const [loading, setLoading] = useState(true);
-  const [addOpen, setAddOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [rtmpUrl, setRtmpUrl] = useState("");
-  const [streamKey, setStreamKey] = useState("");
+  const [connectingPlatform, setConnectingPlatform] = useState<string | null>(null);
+  const [rtmpForm, setRtmpForm] = useState<{ platformId: string; title: string; ingestUrl: string; streamKey: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const apiClient = axios.create({
+  const apiClient = useCallback(() => axios.create({
     baseURL: API_URL,
     headers: { authorization: `Bearer ${token}` },
-  });
+  }), [token]);
 
-  useEffect(() => {
-    apiClient.get(`/streams/channels?profileId=${profileId}`)
+  const fetchChannels = useCallback(() => {
+    apiClient().get(`/streams/channels?profileId=${profileId}`)
       .then((r) => setChannels(Array.isArray(r.data) ? r.data : (r.data?.data ?? [])))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [profileId]);
+  }, [profileId, token]);
 
-  const handleAdd = async (e: React.FormEvent) => {
+  useEffect(() => { fetchChannels(); }, [fetchChannels]);
+
+  const handleOAuth = async (platformId: string) => {
+    setConnectingPlatform(platformId);
+    try {
+      const endpoint = platformId === "youtube"
+        ? `/streams/oauth/youtube/url?profileId=${profileId}`
+        : `/streams/oauth/twitch/url?profileId=${profileId}`;
+      const { data } = await apiClient().get(endpoint);
+      const oauthUrl = data.url || data;
+      // Pass profileId as state param for callback
+      window.location.href = oauthUrl;
+    } catch {
+      setConnectingPlatform(null);
+    }
+  };
+
+  const handleRtmpConnect = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!rtmpForm) return;
     setSaving(true);
     setError("");
     try {
-      const { data } = await apiClient.post("/streams/channels/custom-rtmp", {
+      const ingestUrl = rtmpForm.streamKey
+        ? `${rtmpForm.ingestUrl.replace(/\/$/, "")}/${rtmpForm.streamKey}`
+        : rtmpForm.ingestUrl;
+      await apiClient().post("/streams/channels/custom-rtmp", {
         profileId,
-        name,
-        rtmpUrl,
-        streamKey,
+        title: rtmpForm.title,
+        ingestUrl,
       });
-      setChannels((prev) => [...prev, data]);
-      setName(""); setRtmpUrl(""); setStreamKey(""); setAddOpen(false);
+      setRtmpForm(null);
+      fetchChannels();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? "Failed to add channel.");
+      setError(err?.response?.data?.message ?? "Failed to connect. Check your RTMP URL and stream key.");
     } finally {
       setSaving(false);
     }
   };
 
+  const isConnected = (platformId: string) =>
+    channels.some((c) =>
+      c.channelProvider === platformId ||
+      (platformId === "facebook" && c.channelProvider === "custom_rtmp" && c.currentEndpoint?.includes("facebook")) ||
+      (platformId === "tiktok" && c.channelProvider === "custom_rtmp" && c.currentEndpoint?.includes("tiktok")) ||
+      (platformId === "instagram" && c.channelProvider === "custom_rtmp" && c.currentEndpoint?.includes("instagram")) ||
+      (platformId === "custom" && c.channelProvider === "custom_rtmp"),
+    );
+
   const livePageUrl = `https://${slug}.${rootDomain}/live`;
 
   return (
-    <div className="space-y-4">
-      {/* Built-in destination */}
-      <div className="rounded-xl border border-orange-500/20 bg-orange-500/5 px-5 py-4 flex items-center justify-between">
+    <div className="space-y-6">
+      {/* Your built-in destination */}
+      <div className="rounded-xl border border-green-500/20 bg-green-500/5 px-5 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-xl">🌐</span>
+          <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center text-lg">🌐</div>
           <div>
-            <p className="text-sm font-semibold text-white/80">Your Live Page <span className="ml-2 px-1.5 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">Always active</span></p>
+            <p className="text-sm font-semibold text-white/90">
+              Your Channel Live Page
+              <span className="ml-2 px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs font-medium">Always on</span>
+            </p>
             <a href={livePageUrl} target="_blank" rel="noreferrer"
-              className="text-xs text-orange-400 hover:text-orange-300">{livePageUrl}</a>
+              className="text-xs text-green-400 hover:text-green-300 transition-colors">{livePageUrl}</a>
           </div>
+        </div>
+        <a href={livePageUrl} target="_blank" rel="noreferrer"
+          className="text-xs px-3 py-1.5 rounded-lg border border-green-500/20 text-green-400 hover:bg-green-500/10 transition-colors">
+          Preview ↗
+        </a>
+      </div>
+
+      {/* Platform grid */}
+      <div>
+        <p className="text-xs text-white/30 uppercase tracking-wide font-medium mb-3">Connect platforms — stream to all at once</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {PLATFORMS.map((platform) => {
+            const connected = isConnected(platform.id);
+            const connectedChannels = channels.filter((c) =>
+              c.channelProvider === platform.id ||
+              (platform.id !== "youtube" && platform.id !== "twitch" && c.channelProvider === "custom_rtmp"),
+            );
+            const isConnecting = connectingPlatform === platform.id;
+
+            return (
+              <div key={platform.id}
+                className={`relative rounded-xl border p-4 transition-all ${
+                  connected
+                    ? "border-green-500/30 bg-green-500/5"
+                    : "border-white/5 bg-white/[0.02] hover:border-white/10"
+                }`}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className={`w-10 h-10 rounded-xl ${platform.bg} flex items-center justify-center text-white font-bold text-lg`}>
+                    {platform.icon}
+                  </div>
+                  {connected && (
+                    <span className="px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs font-medium">
+                      Connected
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm font-semibold text-white/80 mb-0.5">{platform.name}</p>
+                <p className="text-xs text-white/30 mb-3">{platform.description}</p>
+
+                {connected ? (
+                  <div className="text-xs text-white/30">
+                    {connectedChannels.map((c) => (
+                      <p key={c.id} className="truncate font-medium text-white/50">{c.title || "Connected"}</p>
+                    ))}
+                  </div>
+                ) : platform.oauthSupported ? (
+                  <button
+                    onClick={() => handleOAuth(platform.id)}
+                    disabled={isConnecting}
+                    className="w-full py-2 rounded-lg text-xs font-semibold text-white transition-colors disabled:opacity-50"
+                    style={{ backgroundColor: platform.color }}
+                  >
+                    {isConnecting ? "Connecting…" : `Connect ${platform.name}`}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setRtmpForm({ platformId: platform.id, title: platform.name, ingestUrl: platform.rtmpUrl, streamKey: "" })}
+                    className="w-full py-2 rounded-lg border border-white/10 hover:border-white/20 text-xs font-semibold text-white/60 hover:text-white transition-colors"
+                  >
+                    Add stream key
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* RTMP channels */}
-      <div className="rounded-xl border border-white/5 bg-white/[0.02] overflow-hidden">
-        <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
-          <span className="text-xs text-white/30 uppercase tracking-wide font-medium">Custom RTMP destinations</span>
-          {!addOpen && (
-            <button onClick={() => setAddOpen(true)}
-              className="text-xs px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors">
-              + Add destination
-            </button>
-          )}
-        </div>
-
-        {addOpen && (
-          <form onSubmit={handleAdd} className="px-4 py-4 border-b border-white/5 flex flex-col gap-3">
-            {error && <p className="text-red-400 text-xs">{error}</p>}
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name (e.g. YouTube, Twitch)"
-              required className={miniInputClass} />
-            <input value={rtmpUrl} onChange={(e) => setRtmpUrl(e.target.value)} placeholder="RTMP URL (e.g. rtmp://a.rtmp.youtube.com/live2)"
-              required className={miniInputClass} />
-            <input value={streamKey} onChange={(e) => setStreamKey(e.target.value)} placeholder="Stream key"
-              required className={miniInputClass} />
-            <div className="flex gap-2">
-              <button type="button" onClick={() => { setAddOpen(false); setError(""); }}
-                className="flex-1 py-2 rounded-lg border border-white/10 text-white/50 text-xs hover:text-white transition-colors">
-                Cancel
-              </button>
-              <button type="submit" disabled={saving}
-                className="flex-1 py-2 rounded-lg bg-orange-500 hover:bg-orange-400 disabled:opacity-50 text-white text-xs font-semibold transition-colors">
-                {saving ? "Saving…" : "Save"}
-              </button>
+      {/* RTMP form modal */}
+      {rtmpForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-sm bg-[#111] border border-white/10 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-base font-semibold">Connect {rtmpForm.title}</h3>
+              <button onClick={() => { setRtmpForm(null); setError(""); }} className="text-white/40 hover:text-white text-xl">×</button>
             </div>
-          </form>
-        )}
+            <form onSubmit={handleRtmpConnect} className="flex flex-col gap-3">
+              {error && <p className="text-red-400 text-xs px-3 py-2 bg-red-500/10 rounded-lg">{error}</p>}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-white/50">Channel name</label>
+                <input value={rtmpForm.title} onChange={(e) => setRtmpForm({ ...rtmpForm, title: e.target.value })}
+                  className={miniInputClass} required />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-white/50">RTMP URL</label>
+                <input value={rtmpForm.ingestUrl} onChange={(e) => setRtmpForm({ ...rtmpForm, ingestUrl: e.target.value })}
+                  placeholder={PLATFORMS.find((p) => p.id === rtmpForm.platformId)?.rtmpPlaceholder}
+                  className={miniInputClass} required />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-white/50">Stream key</label>
+                <input type="password" value={rtmpForm.streamKey} onChange={(e) => setRtmpForm({ ...rtmpForm, streamKey: e.target.value })}
+                  placeholder="Your stream key (kept secret)" className={miniInputClass} />
+                <p className="text-xs text-white/20">Your stream key will be appended to the RTMP URL</p>
+              </div>
+              <div className="flex gap-3 mt-2">
+                <button type="button" onClick={() => { setRtmpForm(null); setError(""); }}
+                  className="flex-1 py-2.5 rounded-lg border border-white/10 text-white/50 text-sm hover:text-white transition-colors">
+                  Cancel
+                </button>
+                <button type="submit" disabled={saving}
+                  className="flex-1 py-2.5 rounded-lg bg-orange-500 hover:bg-orange-400 disabled:opacity-50 text-white text-sm font-semibold transition-colors">
+                  {saving ? "Connecting…" : "Connect"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
-        {loading ? (
-          <div className="py-10 flex items-center justify-center text-white/30 text-sm">Loading…</div>
-        ) : channels.length === 0 ? (
-          <div className="py-10 flex flex-col items-center justify-center text-center gap-2">
-            <span className="text-2xl">📺</span>
-            <p className="text-white/40 text-sm">No RTMP destinations added</p>
-            <p className="text-white/20 text-xs max-w-xs">
-              Add your YouTube, Twitch, or Facebook Live RTMP URL + stream key to restream using OBS or Restream.io
+      {/* Connected channels list */}
+      {channels.length > 0 && (
+        <div className="rounded-xl border border-white/5 bg-white/[0.02] overflow-hidden">
+          <div className="px-4 py-3 border-b border-white/5">
+            <p className="text-xs text-white/30 uppercase tracking-wide font-medium">
+              Connected destinations — scheduled videos stream to all of these
             </p>
           </div>
-        ) : (
-          channels.map((ch) => (
-            <div key={ch.id} className="px-4 py-3 border-b border-white/5 last:border-0 flex items-center justify-between text-sm">
-              <div className="flex items-center gap-3">
-                <span className="text-lg">
-                  {ch.name?.toLowerCase().includes("youtube") ? "▶️" :
-                   ch.name?.toLowerCase().includes("twitch") ? "💜" :
-                   ch.name?.toLowerCase().includes("facebook") ? "🔵" : "📡"}
-                </span>
-                <div>
-                  <p className="text-white/80 font-medium">{ch.name}</p>
-                  <p className="text-white/30 text-xs mt-0.5 font-mono">{ch.rtmpUrl}</p>
-                </div>
+          {channels.map((ch) => (
+            <div key={ch.id} className="px-4 py-3 border-b border-white/5 last:border-0 flex items-center gap-3 text-sm">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold ${
+                ch.channelProvider === "youtube" ? "bg-red-600" :
+                ch.channelProvider === "twitch" ? "bg-purple-600" : "bg-orange-500"
+              }`}>
+                {ch.channelProvider === "youtube" ? "▶" : ch.channelProvider === "twitch" ? "♟" : "⚡"}
               </div>
-              <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/30 text-xs">RTMP</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-white/80 font-medium truncate">{ch.title}</p>
+                <p className="text-white/30 text-xs capitalize">{ch.channelProvider.replace("_", " ")}</p>
+              </div>
+              <span className="flex-shrink-0 px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-xs">Active</span>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
-      <div className="px-4 py-3 rounded-lg bg-white/[0.02] border border-white/5">
-        <p className="text-xs text-white/30 leading-relaxed">
-          <span className="text-white/50 font-medium">How to use RTMP destinations:</span>{" "}
-          Open OBS → Settings → Stream → Custom → paste your RTMP URL and stream key. Go live in OBS to push to that platform.
-          For multi-platform streaming use{" "}
-          <a href="https://restream.io" target="_blank" rel="noreferrer" className="text-orange-400 hover:text-orange-300">Restream.io</a>{" "}
-          as your single RTMP endpoint.
-        </p>
-      </div>
+      {loading && (
+        <div className="py-8 flex items-center justify-center text-white/30 text-sm">Loading channels…</div>
+      )}
     </div>
   );
 }
 
-const miniInputClass = "w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/20 focus:outline-none focus:border-orange-500/60 transition-colors text-xs";
+const miniInputClass = "w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/20 focus:outline-none focus:border-orange-500/60 transition-colors text-sm";
 
 /* ── Shared sub-components ─────────────────────────── */
 

@@ -1,5 +1,7 @@
 import { BaseService, BaseServiceArgs } from "@src/services/baseService";
 import { NotFoundError, UnauthorizedError } from "@src/utils/app_error";
+import { spawn } from "child_process";
+import { logger } from "@src/utils/logger";
 
 export class ScheduledStreamService extends BaseService {
   constructor(args: BaseServiceArgs) {
@@ -45,11 +47,45 @@ export class ScheduledStreamService extends BaseService {
     const due = await this.models.ScheduledStream.findPendingDue();
     for (const stream of due) {
       await this.models.ScheduledStream.updateStatus(stream.id, "live");
+      // Push to all connected RTMP channels (fire-and-forget)
+      this.pushToChannels(stream.profileId, stream.videoUrl, stream.title).catch((err) =>
+        logger.error("Failed to push scheduled stream to channels", err),
+      );
     }
     return due.length;
   }
 
   public async getLiveStream(profileId: string) {
     return this.models.ScheduledStream.findLiveByProfile(profileId);
+  }
+
+  private async pushToChannels(profileId: string, videoUrl: string, title: string) {
+    const channels = await this.models.StreamChannel.findMany({ profileId } as any);
+    if (!channels || channels.length === 0) return;
+
+    for (const channel of channels) {
+      const endpoint = (channel as any).currentEndpoint as string | null;
+      if (!endpoint) continue;
+
+      logger.info(`Pushing scheduled stream "${title}" to ${(channel as any).channelProvider}: ${endpoint}`);
+
+      // Stream via FFmpeg: read video at real-time speed (-re) and push to RTMP
+      const proc = spawn("ffmpeg", [
+        "-re",
+        "-i", videoUrl,
+        "-c:v", "libx264",
+        "-preset", "veryfast",
+        "-maxrate", "3000k",
+        "-bufsize", "6000k",
+        "-pix_fmt", "yuv420p",
+        "-g", "50",
+        "-c:a", "aac",
+        "-b:a", "160k",
+        "-ar", "44100",
+        "-f", "flv",
+        endpoint,
+      ], { detached: true, stdio: "ignore" });
+      proc.unref();
+    }
   }
 }
