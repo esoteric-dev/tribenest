@@ -31,17 +31,15 @@ import {
 } from "./schema";
 import * as policy from "./policy";
 import {
-  ADMIN_URL,
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
+  GOOGLE_REDIRECT_URI,
   LIVEKIT_API_SECRET,
   LIVEKIT_API_KEY,
 } from "@src/configuration/secrets";
 import { ProfileIdInput, profileIdQuerySchema } from "../schema";
 import { AccessToken } from "livekit-server-sdk";
 import { add } from "date-fns";
-
-const GOOGLE_REDIRECT_URI = `${ADMIN_URL}/stream/youtube/oauth`;
 
 export class StreamsController extends BaseController {
   @RouteHandler()
@@ -118,6 +116,7 @@ export class StreamsController extends BaseController {
       access_type: "offline",
       scope,
       prompt: "consent",
+      state: profileId,
     });
 
     return authUrl;
@@ -126,8 +125,13 @@ export class StreamsController extends BaseController {
   @RouteHandler()
   @ValidateSchema(profileIdQuerySchema)
   @isAuthorized(policy.getAll)
-  public async createTwitchOauthUrl(req: Request, res: Response, next: NextFunction): Promise<any> {
-    return this.services.admin.streams.createTwitchOauthUrl();
+  public async createTwitchOauthUrl(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+    @Query query?: ProfileIdInput,
+  ): Promise<any> {
+    return this.services.admin.streams.createTwitchOauthUrl(query!.profileId);
   }
   @RouteHandler()
   @ValidateSchema(getYoutubeOauthTokenSchema)
