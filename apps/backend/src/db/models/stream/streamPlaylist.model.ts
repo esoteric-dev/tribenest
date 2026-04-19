@@ -1,4 +1,4 @@
-import { Kysely, sql } from "kysely";
+import { Kysely } from "kysely";
 
 export type StreamPlaylistStatus = "idle" | "live" | "paused" | "ended";
 
@@ -13,16 +13,16 @@ export class StreamPlaylistModel {
     scheduledEndAt?: Date | null;
   }) {
     return this.client
-      .insertInto("stream_playlists" as any)
+      .insertInto("streamPlaylists" as any)
       .values({
-        profile_id: data.profileId,
+        profileId: data.profileId,
         title: data.title,
-        repeat_count: data.repeatCount ?? null,
-        scheduled_start_at: data.scheduledStartAt ?? null,
-        scheduled_end_at: data.scheduledEndAt ?? null,
+        repeatCount: data.repeatCount ?? null,
+        scheduledStartAt: data.scheduledStartAt ?? null,
+        scheduledEndAt: data.scheduledEndAt ?? null,
         status: "idle",
-        current_repeat: 0,
-        current_video_index: 0,
+        currentRepeat: 0,
+        currentVideoIndex: 0,
       })
       .returningAll()
       .executeTakeFirst();
@@ -30,7 +30,7 @@ export class StreamPlaylistModel {
 
   async findById(id: string) {
     return this.client
-      .selectFrom("stream_playlists" as any)
+      .selectFrom("streamPlaylists" as any)
       .where("id", "=", id)
       .selectAll()
       .executeTakeFirst();
@@ -38,17 +38,17 @@ export class StreamPlaylistModel {
 
   async listByProfile(profileId: string) {
     return this.client
-      .selectFrom("stream_playlists" as any)
-      .where("profile_id", "=", profileId)
-      .orderBy("created_at", "desc")
+      .selectFrom("streamPlaylists" as any)
+      .where("profileId", "=", profileId)
+      .orderBy("createdAt", "desc")
       .selectAll()
       .execute();
   }
 
   async findLiveByProfile(profileId: string) {
     return this.client
-      .selectFrom("stream_playlists" as any)
-      .where("profile_id", "=", profileId)
+      .selectFrom("streamPlaylists" as any)
+      .where("profileId", "=", profileId)
       .where("status", "=", "live")
       .selectAll()
       .executeTakeFirst();
@@ -56,32 +56,31 @@ export class StreamPlaylistModel {
 
   async findScheduledDue() {
     return this.client
-      .selectFrom("stream_playlists" as any)
+      .selectFrom("streamPlaylists" as any)
       .where("status", "=", "idle")
-      .where("scheduled_start_at", "<=", new Date())
+      .where("scheduledStartAt", "<=", new Date())
       .selectAll()
       .execute();
   }
 
   async findExpiredLive() {
     return this.client
-      .selectFrom("stream_playlists" as any)
+      .selectFrom("streamPlaylists" as any)
       .where("status", "=", "live")
-      .where("scheduled_end_at", "<=", new Date())
-      .whereRef("scheduled_end_at", "is not", sql`null`)
+      .where("scheduledEndAt", "is not", null)
+      .where("scheduledEndAt", "<=", new Date())
       .selectAll()
       .execute();
   }
 
   async start(id: string) {
     return this.client
-      .updateTable("stream_playlists" as any)
+      .updateTable("streamPlaylists" as any)
       .set({
         status: "live",
-        current_repeat: 0,
-        current_video_index: 0,
-        current_video_started_at: new Date(),
-        updated_at: new Date(),
+        currentRepeat: 0,
+        currentVideoIndex: 0,
+        currentVideoStartedAt: new Date(),
       })
       .where("id", "=", id)
       .returningAll()
@@ -90,8 +89,8 @@ export class StreamPlaylistModel {
 
   async stop(id: string) {
     return this.client
-      .updateTable("stream_playlists" as any)
-      .set({ status: "ended", updated_at: new Date() })
+      .updateTable("streamPlaylists" as any)
+      .set({ status: "ended" })
       .where("id", "=", id)
       .returningAll()
       .executeTakeFirst();
@@ -99,8 +98,8 @@ export class StreamPlaylistModel {
 
   async pause(id: string) {
     return this.client
-      .updateTable("stream_playlists" as any)
-      .set({ status: "paused", updated_at: new Date() })
+      .updateTable("streamPlaylists" as any)
+      .set({ status: "paused" })
       .where("id", "=", id)
       .returningAll()
       .executeTakeFirst();
@@ -108,8 +107,8 @@ export class StreamPlaylistModel {
 
   async resume(id: string) {
     return this.client
-      .updateTable("stream_playlists" as any)
-      .set({ status: "live", current_video_started_at: new Date(), updated_at: new Date() })
+      .updateTable("streamPlaylists" as any)
+      .set({ status: "live", currentVideoStartedAt: new Date() })
       .where("id", "=", id)
       .returningAll()
       .executeTakeFirst();
@@ -117,13 +116,12 @@ export class StreamPlaylistModel {
 
   async advance(id: string, nextIndex: number, nextRepeat: number, status: string) {
     return this.client
-      .updateTable("stream_playlists" as any)
+      .updateTable("streamPlaylists" as any)
       .set({
-        current_video_index: nextIndex,
-        current_repeat: nextRepeat,
-        current_video_started_at: new Date(),
+        currentVideoIndex: nextIndex,
+        currentRepeat: nextRepeat,
+        currentVideoStartedAt: new Date(),
         status,
-        updated_at: new Date(),
       })
       .where("id", "=", id)
       .returningAll()
@@ -137,13 +135,12 @@ export class StreamPlaylistModel {
     scheduledEndAt?: Date | null;
   }) {
     return this.client
-      .updateTable("stream_playlists" as any)
+      .updateTable("streamPlaylists" as any)
       .set({
         ...(data.title !== undefined ? { title: data.title } : {}),
-        ...(data.repeatCount !== undefined ? { repeat_count: data.repeatCount } : {}),
-        ...(data.scheduledStartAt !== undefined ? { scheduled_start_at: data.scheduledStartAt } : {}),
-        ...(data.scheduledEndAt !== undefined ? { scheduled_end_at: data.scheduledEndAt } : {}),
-        updated_at: new Date(),
+        ...(data.repeatCount !== undefined ? { repeatCount: data.repeatCount } : {}),
+        ...(data.scheduledStartAt !== undefined ? { scheduledStartAt: data.scheduledStartAt } : {}),
+        ...(data.scheduledEndAt !== undefined ? { scheduledEndAt: data.scheduledEndAt } : {}),
       })
       .where("id", "=", id)
       .returningAll()
@@ -152,7 +149,7 @@ export class StreamPlaylistModel {
 
   async delete(id: string) {
     return this.client
-      .deleteFrom("stream_playlists" as any)
+      .deleteFrom("streamPlaylists" as any)
       .where("id", "=", id)
       .execute();
   }

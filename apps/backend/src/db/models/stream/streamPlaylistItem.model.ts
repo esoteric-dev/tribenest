@@ -11,12 +11,12 @@ export class StreamPlaylistItemModel {
     position: number;
   }) {
     return this.client
-      .insertInto("stream_playlist_items" as any)
+      .insertInto("streamPlaylistItems" as any)
       .values({
-        playlist_id: data.playlistId,
+        playlistId: data.playlistId,
         title: data.title,
-        video_url: data.videoUrl,
-        video_filename: data.videoFilename,
+        videoUrl: data.videoUrl,
+        videoFilename: data.videoFilename,
         position: data.position,
       })
       .returningAll()
@@ -25,8 +25,8 @@ export class StreamPlaylistItemModel {
 
   async listByPlaylist(playlistId: string) {
     return this.client
-      .selectFrom("stream_playlist_items" as any)
-      .where("playlist_id", "=", playlistId)
+      .selectFrom("streamPlaylistItems" as any)
+      .where("playlistId", "=", playlistId)
       .orderBy("position", "asc")
       .selectAll()
       .execute();
@@ -34,8 +34,8 @@ export class StreamPlaylistItemModel {
 
   async countByPlaylist(playlistId: string): Promise<number> {
     const result = await this.client
-      .selectFrom("stream_playlist_items" as any)
-      .where("playlist_id", "=", playlistId)
+      .selectFrom("streamPlaylistItems" as any)
+      .where("playlistId", "=", playlistId)
       .select((eb: any) => eb.fn.countAll().as("count"))
       .executeTakeFirst();
     return Number((result as any)?.count ?? 0);
@@ -43,14 +43,14 @@ export class StreamPlaylistItemModel {
 
   async delete(id: string) {
     return this.client
-      .deleteFrom("stream_playlist_items" as any)
+      .deleteFrom("streamPlaylistItems" as any)
       .where("id", "=", id)
       .execute();
   }
 
   async reorder(id: string, position: number) {
     return this.client
-      .updateTable("stream_playlist_items" as any)
+      .updateTable("streamPlaylistItems" as any)
       .set({ position })
       .where("id", "=", id)
       .execute();

@@ -10,10 +10,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 type PlaylistVideo = {
   id: string;
-  playlist_id: string;
+  playlistId: string;
   title: string;
-  video_url: string;
-  video_filename: string;
+  videoUrl: string;
+  videoFilename: string;
   position: number;
 };
 
@@ -21,11 +21,11 @@ type StreamPlaylist = {
   id: string;
   title: string;
   status: "idle" | "live" | "paused" | "ended";
-  repeat_count: number | null;
-  current_repeat: number;
-  current_video_index: number;
-  scheduled_start_at: string | null;
-  scheduled_end_at: string | null;
+  repeatCount: number | null;
+  currentRepeat: number;
+  currentVideoIndex: number;
+  scheduledStartAt: string | null;
+  scheduledEndAt: string | null;
   items: PlaylistVideo[];
 };
 
@@ -326,8 +326,8 @@ function PlaylistCard({
           <span className="text-sm font-semibold text-white/80 truncate">{playlist.title}</span>
           <PlaylistStatusBadge status={playlist.status} />
           <span className="text-xs text-white/30">{playlist.items?.length ?? 0} videos</span>
-          {playlist.repeat_count !== null && (
-            <span className="text-xs text-white/20">×{playlist.repeat_count}</span>
+          {playlist.repeatCount !== null && (
+            <span className="text-xs text-white/20">×{playlist.repeatCount}</span>
           )}
         </button>
         {/* Controls */}
@@ -398,13 +398,13 @@ function PlaylistCard({
               {playlist.items?.map((video, idx) => (
                 <div key={video.id}
                   className={`px-4 py-3 border-b border-white/5 last:border-0 flex items-center gap-3 ${
-                    isLive && idx === playlist.current_video_index ? "bg-white/[0.03]" : ""
+                    isLive && idx === playlist.currentVideoIndex ? "bg-white/[0.03]" : ""
                   }`}>
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-white/5 text-white/30 text-xs flex items-center justify-center font-medium">
-                    {isLive && idx === playlist.current_video_index ? "▶" : idx + 1}
+                    {isLive && idx === playlist.currentVideoIndex ? "▶" : idx + 1}
                   </span>
                   <span className="text-sm text-white/70 truncate flex-1">{video.title}</span>
-                  {isLive && idx === playlist.current_video_index && (
+                  {isLive && idx === playlist.currentVideoIndex && (
                     <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/20">Playing</span>
                   )}
                   <button onClick={() => removeVideo(video.id)}

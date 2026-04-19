@@ -6,9 +6,9 @@ import { useCallback, useEffect, useRef } from "react";
 
 type PlaylistItem = {
   id: string;
-  playlist_id: string;
+  playlistId: string;
   title: string;
-  video_url: string;
+  videoUrl: string;
   position: number;
 };
 
@@ -124,7 +124,7 @@ export function LiveBroadcastsContent() {
             <video
               ref={videoRef}
               key={current.id}
-              src={current.video_url}
+              src={current.videoUrl}
               controls
               autoPlay
               playsInline
