@@ -355,7 +355,7 @@ function StreamChannels({ profileId, token, slug, rootDomain }: {
 
   useEffect(() => {
     apiClient.get(`/streams/channels?profileId=${profileId}`)
-      .then((r) => setChannels(r.data))
+      .then((r) => setChannels(Array.isArray(r.data) ? r.data : (r.data?.data ?? [])))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [profileId]);
