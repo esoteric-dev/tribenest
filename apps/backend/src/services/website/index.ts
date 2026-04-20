@@ -114,9 +114,36 @@ export class WebsiteService extends BaseService {
 
     const website = await this.models.WebsiteVersion.getOneWithPages({ profileId: profile.id, isActive: true });
 
+    const profileData = {
+      id: profile.id,
+      name: profile.name,
+      subdomain: profile.subdomain,
+      paymentProviderName: profileConfiguration?.paymentProviderName,
+      pwaConfig: profileConfiguration?.pwaConfig,
+      address: profileConfiguration?.address,
+      paymentProviderPublicKey: profileConfiguration?.paymentProviderPublicKey
+        ? EncryptionService.decrypt(profileConfiguration.paymentProviderPublicKey)
+        : null,
+    };
+
+    // No published website yet — return defaults so /live still works
     if (!website) {
-      throw new BadRequestError("Website not found");
+      return {
+        page: { pathname, content: null },
+        themeSettings: {
+          colors: { text: "#ffffff", primary: "#d4bbcf", background: "#1c1d29", textPrimary: "#160404" },
+          fontFamily: "inter",
+          cornerRadius: "10",
+          headerLinks: [],
+          socialLinks: [],
+          logo: "",
+        },
+        themeName: "tribe-nest-default",
+        themeVersion: 1,
+        profile: profileData,
+      };
     }
+
     const page = website.pages.find((page) => page.pathname === pathname);
     if (!page) {
       throw new BadRequestError("Page not found");
@@ -127,17 +154,7 @@ export class WebsiteService extends BaseService {
       themeSettings: website.themeSettings,
       themeName: website.themeName,
       themeVersion: website.themeVersion,
-      profile: {
-        id: profile.id,
-        name: profile.name,
-        subdomain: profile.subdomain,
-        paymentProviderName: profileConfiguration?.paymentProviderName,
-        pwaConfig: profileConfiguration?.pwaConfig,
-        address: profileConfiguration?.address,
-        paymentProviderPublicKey: profileConfiguration?.paymentProviderPublicKey
-          ? EncryptionService.decrypt(profileConfiguration.paymentProviderPublicKey)
-          : null,
-      },
+      profile: profileData,
     };
   }
 
