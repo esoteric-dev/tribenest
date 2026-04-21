@@ -223,6 +223,7 @@ export class StreamPlaylistService extends BaseService {
     const proc = spawn(
       "ffmpeg",
       [
+        "-re",
         "-f", "concat",
         "-safe", "0",
         "-protocol_whitelist", "file,http,https,tcp,tls",
