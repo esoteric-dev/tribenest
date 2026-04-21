@@ -1,4 +1,13 @@
-import { ListObjectsV2Command, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  AbortMultipartUploadCommand,
+  CompleteMultipartUploadCommand,
+  CreateMultipartUploadCommand,
+  ListObjectsV2Command,
+  ListPartsCommand,
+  PutObjectCommand,
+  S3Client,
+  UploadPartCommand,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import * as fs from "fs";
 
@@ -40,6 +49,34 @@ export default class S3Service {
     const presignedUrl = await getSignedUrl(this.client, command, { expiresIn: 60 * 60 * 2 }); // 2 hours
     const remoteUrl = `${this.s3Config.bucketUrl}/${key}`;
     return { presignedUrl, remoteUrl };
+  }
+
+  public async initiateMultipartUpload(key: string): Promise<string> {
+    const command = new CreateMultipartUploadCommand({ Bucket: this.s3Config.bucketName, Key: key });
+    const result = await this.client.send(command);
+    return result.UploadId!;
+  }
+
+  public async getPresignedPartUrl(key: string, uploadId: string, partNumber: number): Promise<string> {
+    const command = new UploadPartCommand({ Bucket: this.s3Config.bucketName, Key: key, UploadId: uploadId, PartNumber: partNumber });
+    return getSignedUrl(this.client, command, { expiresIn: 60 * 60 * 2 });
+  }
+
+  public async completeMultipartUpload(key: string, uploadId: string): Promise<string> {
+    const listCommand = new ListPartsCommand({ Bucket: this.s3Config.bucketName, Key: key, UploadId: uploadId });
+    const listResult = await this.client.send(listCommand);
+    const parts = (listResult.Parts ?? []).map((p) => ({ ETag: p.ETag!, PartNumber: p.PartNumber! }));
+    const completeCommand = new CompleteMultipartUploadCommand({
+      Bucket: this.s3Config.bucketName, Key: key, UploadId: uploadId,
+      MultipartUpload: { Parts: parts },
+    });
+    await this.client.send(completeCommand);
+    return `${this.s3Config.bucketUrl}/${key}`;
+  }
+
+  public async abortMultipartUpload(key: string, uploadId: string): Promise<void> {
+    const command = new AbortMultipartUploadCommand({ Bucket: this.s3Config.bucketName, Key: key, UploadId: uploadId });
+    await this.client.send(command);
   }
 
   public async uploadFile(filePath: string, key: string): Promise<string> {

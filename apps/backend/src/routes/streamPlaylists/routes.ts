@@ -9,8 +9,13 @@ const init: InitRouteFunction = ({ services, workers }) => {
 
   router.use((req, _, next) => requireAuthentication(req, next, services));
 
-  // Presigned URL for video upload
+  // Presigned URL for video upload (legacy single-PUT)
   router.post("/presigned-url", (...args) => controller.getPresignedUrl(...args));
+  // Multipart upload for large files
+  router.post("/multipart/start", (...args) => controller.multipartStart(...args));
+  router.post("/multipart/part-url", (...args) => controller.multipartPartUrl(...args));
+  router.post("/multipart/complete", (...args) => controller.multipartComplete(...args));
+  router.post("/multipart/abort", (...args) => controller.multipartAbort(...args));
   // CRUD
   router.post("/", (...args) => controller.create(...args));
   router.get("/", (...args) => controller.list(...args));

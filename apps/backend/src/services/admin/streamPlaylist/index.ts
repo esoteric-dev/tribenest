@@ -21,6 +21,30 @@ export class StreamPlaylistService extends BaseService {
     return s3Client.getPresignedUrl(key);
   }
 
+  public async initiateMultipartUpload(profileId: string, filename: string) {
+    const s3Client = await this.apis.getS3Client(profileId);
+    const key = `stream-playlists/${profileId}/${Date.now()}-${filename}`;
+    const uploadId = await s3Client.initiateMultipartUpload(key);
+    return { uploadId, key };
+  }
+
+  public async getPresignedPartUrl(profileId: string, key: string, uploadId: string, partNumber: number) {
+    const s3Client = await this.apis.getS3Client(profileId);
+    const presignedUrl = await s3Client.getPresignedPartUrl(key, uploadId, partNumber);
+    return { presignedUrl };
+  }
+
+  public async completeMultipartUpload(profileId: string, key: string, uploadId: string) {
+    const s3Client = await this.apis.getS3Client(profileId);
+    const remoteUrl = await s3Client.completeMultipartUpload(key, uploadId);
+    return { remoteUrl };
+  }
+
+  public async abortMultipartUpload(profileId: string, key: string, uploadId: string) {
+    const s3Client = await this.apis.getS3Client(profileId);
+    await s3Client.abortMultipartUpload(key, uploadId);
+  }
+
   public async create(data: {
     profileId: string;
     title: string;

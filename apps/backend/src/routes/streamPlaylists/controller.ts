@@ -9,6 +9,31 @@ export class StreamPlaylistsController extends BaseController {
     return this.services.admin.streamPlaylist.getPresignedUploadUrl(profileId, filename);
   }
 
+  @RouteHandler()
+  async multipartStart(req: Request, _: Response, __: NextFunction): Promise<any> {
+    const { profileId, filename } = req.body;
+    return this.services.admin.streamPlaylist.initiateMultipartUpload(profileId, filename);
+  }
+
+  @RouteHandler()
+  async multipartPartUrl(req: Request, _: Response, __: NextFunction): Promise<any> {
+    const { profileId, key, uploadId, partNumber } = req.body;
+    return this.services.admin.streamPlaylist.getPresignedPartUrl(profileId, key, uploadId, partNumber);
+  }
+
+  @RouteHandler()
+  async multipartComplete(req: Request, _: Response, __: NextFunction): Promise<any> {
+    const { profileId, key, uploadId } = req.body;
+    return this.services.admin.streamPlaylist.completeMultipartUpload(profileId, key, uploadId);
+  }
+
+  @RouteHandler({ statusCode: 204 })
+  async multipartAbort(req: Request, _: Response, __: NextFunction): Promise<any> {
+    const { profileId, key, uploadId } = req.body;
+    await this.services.admin.streamPlaylist.abortMultipartUpload(profileId, key, uploadId);
+    return null;
+  }
+
   @RouteHandler({ statusCode: 201 })
   async create(req: Request, _: Response, __: NextFunction): Promise<any> {
     const { profileId, title, repeatCount, scheduledStartAt, scheduledEndAt } = req.body;

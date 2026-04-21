@@ -705,15 +705,38 @@ function AddVideoForm({ playlistId, profileId, token, onDone, onCancel }: {
     e.preventDefault();
     if (!file || !title) return;
     setUploading(true); setError("");
+    const CHUNK_SIZE = 50 * 1024 * 1024; // 50 MB per part (well under Cloudflare's limit)
+    let uploadId: string | null = null;
+    let key: string | null = null;
     try {
-      const { data: { presignedUrl, remoteUrl } } = await apiClient.post("/stream-playlists/presigned-url", { profileId, filename: file.name });
-      await axios.put(presignedUrl, file, {
-        headers: { "Content-Type": file.type || "video/mp4" },
-        onUploadProgress: (evt) => { if (evt.total) setProgress(Math.round((evt.loaded * 100) / evt.total)); },
-      });
+      // Start multipart upload
+      const { data: startData } = await apiClient.post("/stream-playlists/multipart/start", { profileId, filename: file.name });
+      uploadId = startData.uploadId;
+      key = startData.key;
+
+      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+      for (let i = 0; i < totalChunks; i++) {
+        const chunk = file.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+        const { data: { presignedUrl } } = await apiClient.post("/stream-playlists/multipart/part-url", { profileId, key, uploadId, partNumber: i + 1 });
+        await axios.put(presignedUrl, chunk, {
+          headers: { "Content-Type": file.type || "video/mp4" },
+          onUploadProgress: (evt) => {
+            if (evt.total) {
+              const chunkProgress = evt.loaded / evt.total;
+              setProgress(Math.round(((i + chunkProgress) / totalChunks) * 100));
+            }
+          },
+        });
+      }
+
+      // Complete multipart — backend fetches ETags via ListParts
+      const { data: { remoteUrl } } = await apiClient.post("/stream-playlists/multipart/complete", { profileId, key, uploadId });
       await apiClient.post(`/stream-playlists/${playlistId}/videos?profileId=${profileId}`, { title, videoUrl: remoteUrl, videoFilename: file.name });
       onDone();
     } catch (err: any) {
+      if (uploadId && key) {
+        apiClient.post("/stream-playlists/multipart/abort", { profileId, key, uploadId }).catch(() => {});
+      }
       setError(err?.response?.data?.message ?? "Upload failed.");
     } finally { setUploading(false); }
   };
