@@ -36,9 +36,11 @@ export function LiveBroadcastsContent() {
   const [activeSlot, setActiveSlot] = useState<"a" | "b">("a");
   const activeSlotRef = useRef<"a" | "b">("a");
 
-  // Local index for optimistic advance — synced from server, updated instantly on end
+  // Local index/repeat for optimistic advance — synced from server, updated instantly on end
   const [localIndex, setLocalIndex] = useState<number | null>(null);
   const localIndexRef = useRef<number>(0);
+  const [localRepeat, setLocalRepeat] = useState<number>(0);
+  const localRepeatRef = useRef<number>(0);
   const advancingRef = useRef(false);
   const playlistIdRef = useRef<string | null>(null);
 
@@ -65,6 +67,8 @@ export function LiveBroadcastsContent() {
     const idx = livePlaylist.currentVideoIndex;
     localIndexRef.current = idx;
     setLocalIndex(idx);
+    localRepeatRef.current = livePlaylist.currentRepeat;
+    setLocalRepeat(livePlaylist.currentRepeat);
     setActiveSlot("a");
     activeSlotRef.current = "a";
 
@@ -124,9 +128,15 @@ export function LiveBroadcastsContent() {
     const currentIdx = localIndexRef.current;
     if (total === 0) { advancingRef.current = false; return; }
 
-    const nextIdx = getNextIndex(currentIdx, total, livePlaylist.repeatCount, livePlaylist.currentRepeat);
+    const currentRepeat = localRepeatRef.current;
+    const nextIdx = getNextIndex(currentIdx, total, livePlaylist.repeatCount, currentRepeat);
 
     if (nextIdx !== null) {
+      // If we wrapped back to the start, increment the local repeat counter
+      const nextRepeat = nextIdx === 0 && currentIdx !== 0 ? currentRepeat + 1 : currentRepeat;
+      localRepeatRef.current = nextRepeat;
+      setLocalRepeat(nextRepeat);
+
       // Swap slots instantly — the inactive one was preloading nextIdx
       const newSlot: "a" | "b" = slot === "a" ? "b" : "a";
       activeSlotRef.current = newSlot;
@@ -140,7 +150,7 @@ export function LiveBroadcastsContent() {
       if (newActiveEl) newActiveEl.play().catch(() => {});
 
       // Preload the one after next on the now-inactive slot
-      const afterNextIdx = getNextIndex(nextIdx, total, livePlaylist.repeatCount, livePlaylist.currentRepeat);
+      const afterNextIdx = getNextIndex(nextIdx, total, livePlaylist.repeatCount, nextRepeat);
       if (newInactiveEl && afterNextIdx !== null && items[afterNextIdx]) {
         newInactiveEl.src = items[afterNextIdx].videoUrl;
         newInactiveEl.load();
@@ -254,7 +264,7 @@ export function LiveBroadcastsContent() {
 
           {livePlaylist.repeatCount !== null && (
             <p className="text-xs mt-4" style={{ color: themeSettings.colors.text, opacity: 0.3 }}>
-              Loop {livePlaylist.currentRepeat + 1} of {livePlaylist.repeatCount}
+              Loop {localRepeat + 1} of {livePlaylist.repeatCount}
             </p>
           )}
         </div>
