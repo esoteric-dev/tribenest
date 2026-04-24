@@ -68,8 +68,8 @@ export class StreamPlaylistsController extends BaseController {
   @RouteHandler({ statusCode: 201 })
   async addVideo(req: Request, _: Response, __: NextFunction): Promise<any> {
     const profileId = req.query.profileId as string;
-    const { title, videoUrl, videoFilename } = req.body;
-    return this.services.admin.streamPlaylist.addVideo(req.params.id, profileId, { title, videoUrl, videoFilename });
+    const { title, videoUrl, videoFilename, description } = req.body;
+    return this.services.admin.streamPlaylist.addVideo(req.params.id, profileId, { title, videoUrl, videoFilename, description: description ?? null });
   }
 
   @RouteHandler({ statusCode: 204 })

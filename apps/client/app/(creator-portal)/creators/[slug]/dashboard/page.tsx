@@ -7,7 +7,7 @@ import { useCreatorAuth } from "../../../../_contexts/creator-auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-type PlaylistVideo = { id: string; playlistId: string; title: string; videoUrl: string; videoFilename: string; position: number };
+type PlaylistVideo = { id: string; playlistId: string; title: string; videoUrl: string; videoFilename: string; position: number; description?: string | null };
 type StreamPlaylist = { id: string; title: string; status: "idle" | "live" | "paused" | "ended"; repeatCount: number | null; currentRepeat: number; currentVideoIndex: number; scheduledStartAt: string | null; scheduledEndAt: string | null; items: PlaylistVideo[] };
 type StreamChannel = { id: string; title: string; channelProvider: "youtube" | "twitch" | "custom_rtmp"; currentEndpoint: string | null; externalId: string | null };
 
@@ -437,16 +437,21 @@ function StudioLiveView({ livePlaylist, channels, profile, token, actionLoading,
               (livePlaylist.items ?? []).map((video, idx) => {
                 const isCurrent = idx === livePlaylist.currentVideoIndex;
                 return (
-                  <div key={video.id} className={`flex items-center gap-3 px-4 py-3 border-b border-[#1a1a1a] transition-colors ${isCurrent ? "bg-[#1a1a1a]" : "hover:bg-[#111]"}`}>
-                    <div className={`w-8 h-8 rounded flex items-center justify-center text-xs font-bold flex-shrink-0 ${isCurrent ? "bg-[#cc0000] text-white" : "bg-[#272727] text-[#aaa]"}`}>
-                      {isCurrent && isLive ? "▶" : idx + 1}
+                  <div key={video.id} className={`px-4 py-3 border-b border-[#1a1a1a] transition-colors ${isCurrent ? "bg-[#1a1a1a]" : "hover:bg-[#111]"}`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded flex items-center justify-center text-xs font-bold flex-shrink-0 ${isCurrent ? "bg-[#cc0000] text-white" : "bg-[#272727] text-[#aaa]"}`}>
+                        {isCurrent && isLive ? "▶" : idx + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm truncate ${isCurrent ? "text-white font-medium" : "text-[#aaa]"}`}>{video.title}</p>
+                        {isCurrent && <p className="text-xs text-[#cc0000] mt-0.5">{isLive ? "Now streaming" : "Paused"}</p>}
+                      </div>
+                      {isCurrent && isLive && (
+                        <span className="flex-shrink-0 px-1.5 py-0.5 rounded bg-[#cc0000]/20 text-[#ff4444] text-[10px] font-semibold border border-[#cc0000]/20">LIVE</span>
+                      )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm truncate ${isCurrent ? "text-white font-medium" : "text-[#aaa]"}`}>{video.title}</p>
-                      {isCurrent && <p className="text-xs text-[#cc0000] mt-0.5">{isLive ? "Now streaming" : "Paused"}</p>}
-                    </div>
-                    {isCurrent && isLive && (
-                      <span className="flex-shrink-0 px-1.5 py-0.5 rounded bg-[#cc0000]/20 text-[#ff4444] text-[10px] font-semibold border border-[#cc0000]/20">LIVE</span>
+                    {video.description && (
+                      <p className="text-xs text-[#555] mt-1.5 pl-11 line-clamp-2 leading-relaxed">{video.description}</p>
                     )}
                   </div>
                 );
@@ -483,16 +488,21 @@ function PlaylistTab({ livePlaylist, profileId, token, onRefresh }: { livePlayli
       {(livePlaylist.items ?? []).map((video, idx) => {
         const isCurrent = idx === livePlaylist.currentVideoIndex;
         return (
-          <div key={video.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isCurrent ? "bg-white/5 border border-white/10" : "hover:bg-white/[0.03]"}`}>
-            <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${isCurrent ? "bg-[#cc0000] text-white" : "bg-[#272727] text-[#aaa]"}`}>
-              {isCurrent && isLive ? "▶" : idx + 1}
-            </span>
-            <span className="flex-1 text-sm text-[#ccc] truncate">{video.title}</span>
-            {isCurrent && <span className="text-xs text-[#cc0000] flex-shrink-0">Playing</span>}
-            <button onClick={() => removeVideo(video.id)} disabled={removingId === video.id}
-              className="text-[#555] hover:text-red-400 text-xs transition-colors disabled:opacity-40 flex-shrink-0">
-              {removingId === video.id ? "…" : "Remove"}
-            </button>
+          <div key={video.id} className={`px-3 py-2.5 rounded-lg transition-colors ${isCurrent ? "bg-white/5 border border-white/10" : "hover:bg-white/[0.03]"}`}>
+            <div className="flex items-center gap-3">
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${isCurrent ? "bg-[#cc0000] text-white" : "bg-[#272727] text-[#aaa]"}`}>
+                {isCurrent && isLive ? "▶" : idx + 1}
+              </span>
+              <span className="flex-1 text-sm text-[#ccc] truncate">{video.title}</span>
+              {isCurrent && <span className="text-xs text-[#cc0000] flex-shrink-0">Playing</span>}
+              <button onClick={() => removeVideo(video.id)} disabled={removingId === video.id}
+                className="text-[#555] hover:text-red-400 text-xs transition-colors disabled:opacity-40 flex-shrink-0">
+                {removingId === video.id ? "…" : "Remove"}
+              </button>
+            </div>
+            {video.description && (
+              <p className="text-xs text-[#555] mt-1.5 pl-9 leading-relaxed line-clamp-2">{video.description}</p>
+            )}
           </div>
         );
       })}
@@ -715,13 +725,18 @@ function PlaylistCard({ playlist, profileId, token, expanded, onToggle, onAction
           ) : (
             <div className="divide-y divide-[#1a1a1a]">
               {playlist.items?.map((video, idx) => (
-                <div key={video.id} className={`px-4 py-2.5 flex items-center gap-3 ${isLive && idx === playlist.currentVideoIndex ? "bg-[#1a1a1a]" : ""}`}>
-                  <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${isLive && idx === playlist.currentVideoIndex ? "bg-[#cc0000] text-white" : "bg-[#2a2a2a] text-[#555]"}`}>
-                    {isLive && idx === playlist.currentVideoIndex ? "▶" : idx + 1}
-                  </span>
-                  <span className="text-sm text-[#ccc] truncate flex-1">{video.title}</span>
-                  {isLive && idx === playlist.currentVideoIndex && <span className="text-xs text-[#cc0000] flex-shrink-0">Playing</span>}
-                  <button onClick={() => removeVideo(video.id)} disabled={removingId === video.id} className="text-[#555] hover:text-red-400 text-xs transition-colors disabled:opacity-40">{removingId === video.id ? "…" : "remove"}</button>
+                <div key={video.id} className={`px-4 py-2.5 ${isLive && idx === playlist.currentVideoIndex ? "bg-[#1a1a1a]" : ""}`}>
+                  <div className="flex items-center gap-3">
+                    <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${isLive && idx === playlist.currentVideoIndex ? "bg-[#cc0000] text-white" : "bg-[#2a2a2a] text-[#555]"}`}>
+                      {isLive && idx === playlist.currentVideoIndex ? "▶" : idx + 1}
+                    </span>
+                    <span className="text-sm text-[#ccc] truncate flex-1">{video.title}</span>
+                    {isLive && idx === playlist.currentVideoIndex && <span className="text-xs text-[#cc0000] flex-shrink-0">Playing</span>}
+                    <button onClick={() => removeVideo(video.id)} disabled={removingId === video.id} className="text-[#555] hover:text-red-400 text-xs transition-colors disabled:opacity-40">{removingId === video.id ? "…" : "remove"}</button>
+                  </div>
+                  {video.description && (
+                    <p className="text-xs text-[#555] mt-1 pl-9 line-clamp-1 leading-relaxed">{video.description}</p>
+                  )}
                 </div>
               ))}
             </div>
@@ -741,7 +756,12 @@ function PlaylistCard({ playlist, profileId, token, expanded, onToggle, onAction
 
 /* ── Add video form ─────────────────────────────────── */
 function AddVideoForm({ playlistId, profileId, token, onDone, onCancel }: { playlistId: string; profileId: string; token: string; onDone: () => void; onCancel: () => void }) {
-  const [title, setTitle] = useState(""); const [file, setFile] = useState<File | null>(null); const [uploading, setUploading] = useState(false); const [progress, setProgress] = useState(0); const [error, setError] = useState("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const api = axios.create({ baseURL: API_URL, headers: { authorization: `Bearer ${token}` } });
 
@@ -757,7 +777,9 @@ function AddVideoForm({ playlistId, profileId, token, onDone, onCancel }: { play
         await axios.put(presignedUrl, chunk, { headers: { "Content-Type": file.type || "video/mp4" }, onUploadProgress: (evt) => { if (evt.total) setProgress(Math.round(((i + evt.loaded / evt.total) / total) * 100)); } });
       }
       const { data: { remoteUrl } } = await api.post("/stream-playlists/multipart/complete", { profileId, key, uploadId });
-      await api.post(`/stream-playlists/${playlistId}/videos?profileId=${profileId}`, { title, videoUrl: remoteUrl, videoFilename: file.name });
+      await api.post(`/stream-playlists/${playlistId}/videos?profileId=${profileId}`, {
+        title, videoUrl: remoteUrl, videoFilename: file.name, description: description || null,
+      });
       onDone();
     } catch (err: any) {
       if (uploadId && key) api.post("/stream-playlists/multipart/abort", { profileId, key, uploadId }).catch(() => {});
@@ -769,11 +791,18 @@ function AddVideoForm({ playlistId, profileId, token, onDone, onCancel }: { play
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       {error && <p className="text-red-400 text-xs">{error}</p>}
       <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Video title" required className={inputClass} />
+      <textarea
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        placeholder="Video description (pushed to YouTube & Twitch when this video plays)"
+        rows={3}
+        className={inputClass + " resize-none"}
+      />
       <div onClick={() => !uploading && fileRef.current?.click()} className="flex items-center justify-center py-5 rounded-xl border border-dashed border-[#303030] hover:border-[#555] cursor-pointer transition-colors">
         {uploading ? (
           <div className="flex flex-col items-center gap-2 w-full px-6">
             <div className="w-full bg-[#272727] rounded-full h-1.5"><div className="h-full bg-white rounded-full transition-all" style={{ width: `${progress}%` }} /></div>
-            <span className="text-xs text-[#aaa]">{progress}%</span>
+            <span className="text-xs text-[#aaa]">{progress}% uploaded</span>
           </div>
         ) : file ? (
           <span className="text-xs text-[#aaa]">{file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB)</span>

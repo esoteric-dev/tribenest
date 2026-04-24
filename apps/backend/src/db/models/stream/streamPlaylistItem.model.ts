@@ -9,6 +9,7 @@ export class StreamPlaylistItemModel {
     videoUrl: string;
     videoFilename: string;
     position: number;
+    description?: string | null;
   }) {
     return this.client
       .insertInto("streamPlaylistItems" as any)
@@ -18,6 +19,7 @@ export class StreamPlaylistItemModel {
         videoUrl: data.videoUrl,
         videoFilename: data.videoFilename,
         position: data.position,
+        description: data.description ?? null,
       })
       .returningAll()
       .executeTakeFirst();

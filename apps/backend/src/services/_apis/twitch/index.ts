@@ -102,6 +102,30 @@ export class TwitchApiService {
     }
   }
 
+  public async updateChannelInfo({
+    credentials,
+    broadcasterId,
+    title,
+  }: {
+    credentials: TwitchOAuthCredentials;
+    broadcasterId: string;
+    title: string;
+  }) {
+    try {
+      await axios.patch(
+        `https://api.twitch.tv/helix/channels?broadcaster_id=${broadcasterId}`,
+        { title },
+        {
+          headers: {
+            Authorization: `Bearer ${credentials.access_token}`,
+            "Client-ID": TWITCH_CLIENT_ID,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+    } catch { /* ignore — non-critical */ }
+  }
+
   public async getStreamInfo({
     credentials,
     broadcasterId,
