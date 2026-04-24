@@ -474,6 +474,7 @@ function StudioLiveView({ livePlaylist, channels, profile, token, actionLoading,
 function PlaylistTab({ livePlaylist, profileId, token, onRefresh }: { livePlaylist: StreamPlaylist; profileId: string; token: string; onRefresh: () => void }) {
   const [addOpen, setAddOpen] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const api = axios.create({ baseURL: API_URL, headers: { authorization: `Bearer ${token}` } });
   const isLive = livePlaylist.status === "live";
 
@@ -487,6 +488,7 @@ function PlaylistTab({ livePlaylist, profileId, token, onRefresh }: { livePlayli
     <div className="p-4 space-y-1">
       {(livePlaylist.items ?? []).map((video, idx) => {
         const isCurrent = idx === livePlaylist.currentVideoIndex;
+        const isEditing = editingId === video.id;
         return (
           <div key={video.id} className={`px-3 py-2.5 rounded-lg transition-colors ${isCurrent ? "bg-white/5 border border-white/10" : "hover:bg-white/[0.03]"}`}>
             <div className="flex items-center gap-3">
@@ -495,13 +497,33 @@ function PlaylistTab({ livePlaylist, profileId, token, onRefresh }: { livePlayli
               </span>
               <span className="flex-1 text-sm text-[#ccc] truncate">{video.title}</span>
               {isCurrent && <span className="text-xs text-[#cc0000] flex-shrink-0">Playing</span>}
+              <button
+                onClick={() => setEditingId(isEditing ? null : video.id)}
+                className={`text-xs transition-colors flex-shrink-0 ${isEditing ? "text-white" : "text-[#555] hover:text-[#aaa]"}`}
+                title="Edit description"
+              >
+                ✎
+              </button>
               <button onClick={() => removeVideo(video.id)} disabled={removingId === video.id}
                 className="text-[#555] hover:text-red-400 text-xs transition-colors disabled:opacity-40 flex-shrink-0">
-                {removingId === video.id ? "…" : "Remove"}
+                {removingId === video.id ? "…" : "✕"}
               </button>
             </div>
-            {video.description && (
+            {!isEditing && video.description && (
               <p className="text-xs text-[#555] mt-1.5 pl-9 leading-relaxed line-clamp-2">{video.description}</p>
+            )}
+            {isEditing && (
+              <div className="mt-2 pl-9">
+                <VideoDescriptionEditor
+                  video={video}
+                  playlistId={livePlaylist.id}
+                  profileId={profileId}
+                  token={token}
+                  isCurrent={isCurrent}
+                  onSaved={() => { setEditingId(null); onRefresh(); }}
+                  onCancel={() => setEditingId(null)}
+                />
+              </div>
             )}
           </div>
         );
@@ -515,6 +537,63 @@ function PlaylistTab({ livePlaylist, profileId, token, onRefresh }: { livePlayli
               onDone={() => { setAddOpen(false); onRefresh(); }} onCancel={() => setAddOpen(false)} />
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/* ── Video description editor (inline in studio) ────── */
+function VideoDescriptionEditor({ video, playlistId, profileId, token, isCurrent, onSaved, onCancel }: {
+  video: PlaylistVideo; playlistId: string; profileId: string; token: string;
+  isCurrent: boolean; onSaved: () => void; onCancel: () => void;
+}) {
+  const [description, setDescription] = useState(video.description ?? "");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await axios.patch(
+        `${API_URL}/stream-playlists/${playlistId}/videos/${video.id}?profileId=${profileId}`,
+        { description: description || null },
+        { headers: { authorization: `Bearer ${token}` } },
+      );
+      setSaved(true);
+      setTimeout(onSaved, 600);
+    } catch { /* ignore */ }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <div className="space-y-2">
+      <textarea
+        value={description}
+        onChange={(e) => { setDescription(e.target.value); setSaved(false); }}
+        placeholder="Video description — pushed live to YouTube &amp; Twitch when this video is playing"
+        rows={4}
+        autoFocus
+        className="w-full px-3 py-2 rounded-lg bg-[#111] border border-[#303030] focus:border-[#555] text-sm text-white placeholder-[#555] focus:outline-none resize-none transition-colors"
+      />
+      {isCurrent && (
+        <p className="text-xs text-[#cc0000] flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#cc0000] animate-pulse inline-block" />
+          This video is currently streaming — saving will update YouTube &amp; Twitch immediately
+        </p>
+      )}
+      <div className="flex gap-2">
+        <button onClick={onCancel} className="px-3 py-1.5 rounded-lg border border-[#303030] text-xs text-[#aaa] hover:text-white transition-colors">
+          Cancel
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 ${
+            saved ? "bg-green-600 text-white" : "bg-white text-black hover:bg-[#e5e5e5]"
+          }`}
+        >
+          {saving ? "Saving…" : saved ? "✓ Saved" : "Save"}
+        </button>
       </div>
     </div>
   );

@@ -24,6 +24,7 @@ const init: InitRouteFunction = ({ services, workers }) => {
   router.delete("/:id", (...args) => controller.remove(...args));
   // Video management
   router.post("/:id/videos", (...args) => controller.addVideo(...args));
+  router.patch("/:id/videos/:videoId", (...args) => controller.updateVideo(...args));
   router.delete("/:id/videos/:videoId", (...args) => controller.removeVideo(...args));
   // Playback control
   router.post("/:id/start", (...args) => controller.start(...args));

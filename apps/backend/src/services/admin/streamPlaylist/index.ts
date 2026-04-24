@@ -154,6 +154,33 @@ export class StreamPlaylistService extends BaseService {
     });
   }
 
+  public async updateVideo(itemId: string, playlistId: string, profileId: string, data: {
+    title?: string;
+    description?: string | null;
+  }) {
+    const playlist = await this.models.StreamPlaylist.findById(playlistId);
+    if (!playlist) throw new NotFoundError("Playlist not found");
+    if ((playlist as any).profileId !== profileId) throw new UnauthorizedError("Not authorized");
+
+    const updated = await this.models.StreamPlaylistItem.update(itemId, data);
+
+    // If the playlist is live and this is the currently playing video, push description update now
+    const p = playlist as any;
+    if (p.status === "live") {
+      const items = await this.models.StreamPlaylistItem.listByPlaylist(playlistId);
+      const currentItem = items[p.currentVideoIndex] as any;
+      if (currentItem && currentItem.id === itemId) {
+        const title = (data.title ?? currentItem.title) as string;
+        const description = (data.description !== undefined ? data.description : currentItem.description) ?? "";
+        this.updatePlatformDescriptions(playlistId, title, description).catch((err) =>
+          logger.error("Failed to live-update platform descriptions", err),
+        );
+      }
+    }
+
+    return updated;
+  }
+
   public async removeVideo(itemId: string, playlistId: string, profileId: string) {
     const playlist = await this.models.StreamPlaylist.findById(playlistId);
     if (!playlist) throw new NotFoundError("Playlist not found");

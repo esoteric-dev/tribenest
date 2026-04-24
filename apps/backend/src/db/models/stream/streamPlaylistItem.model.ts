@@ -50,6 +50,18 @@ export class StreamPlaylistItemModel {
       .execute();
   }
 
+  async update(id: string, data: { title?: string; description?: string | null }) {
+    return this.client
+      .updateTable("streamPlaylistItems" as any)
+      .set({
+        ...(data.title !== undefined ? { title: data.title } : {}),
+        ...(data.description !== undefined ? { description: data.description } : {}),
+      })
+      .where("id", "=", id)
+      .returningAll()
+      .executeTakeFirst();
+  }
+
   async reorder(id: string, position: number) {
     return this.client
       .updateTable("streamPlaylistItems" as any)
