@@ -108,7 +108,7 @@ export class StreamPlaylistModel {
   async resume(id: string) {
     return this.client
       .updateTable("streamPlaylists" as any)
-      .set({ status: "live", currentVideoStartedAt: new Date() })
+      .set({ status: "live", currentVideoIndex: 0, currentRepeat: 0, currentVideoStartedAt: new Date() })
       .where("id", "=", id)
       .returningAll()
       .executeTakeFirst();

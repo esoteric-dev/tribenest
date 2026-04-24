@@ -157,6 +157,9 @@ export function LiveBroadcastsContent() {
       }
     }
 
+    // Unblock next advance before server sync so back-to-back short videos don't get skipped
+    advancingRef.current = false;
+
     // Background: sync with server
     try {
       await httpClient.post(`/public/stream-playlists/${livePlaylist.id}/advance`, {
@@ -164,8 +167,6 @@ export function LiveBroadcastsContent() {
       });
       queryClient.invalidateQueries({ queryKey: ["live-playlist", profile?.id] });
     } catch { /* ignore */ }
-
-    advancingRef.current = false;
   }, [livePlaylist, httpClient, profile?.id, queryClient, items, getNextIndex]);
 
   const effectiveIndex = localIndex ?? livePlaylist?.currentVideoIndex ?? 0;
@@ -206,23 +207,23 @@ export function LiveBroadcastsContent() {
             <h2 className="text-xl font-bold" style={{ color: themeSettings.colors.text }}>{current.title}</h2>
           </div>
 
-          {/* Dual-buffer video player */}
+          {/* Dual-buffer video player — no controls, only the streamer can pause */}
           <div
             className="overflow-hidden mb-6 relative"
             style={{ borderRadius: `${themeSettings.cornerRadius}px`, border: `1px solid ${themeSettings.colors.primary}40`, background: "#000" }}
           >
             <video
               ref={videoA}
-              controls
               playsInline
               onEnded={() => handleEnded("a")}
+              onPause={() => { videoA.current?.play().catch(() => {}); }}
               style={activeSlot === "a" ? videoStyle : hiddenStyle}
             />
             <video
               ref={videoB}
-              controls
               playsInline
               onEnded={() => handleEnded("b")}
+              onPause={() => { videoB.current?.play().catch(() => {}); }}
               style={activeSlot === "b" ? videoStyle : hiddenStyle}
             />
           </div>

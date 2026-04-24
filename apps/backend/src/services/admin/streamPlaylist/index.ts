@@ -1,10 +1,19 @@
 import { BaseService, BaseServiceArgs } from "@src/services/baseService";
 import { NotFoundError, UnauthorizedError } from "@src/utils/app_error";
 import { logger } from "@src/utils/logger";
-import { spawn } from "child_process";
+import { spawn, ChildProcess } from "child_process";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+
+// Module-level map: playlistId → active FFmpeg processes (one per channel)
+const activeFfmpegProcs = new Map<string, ChildProcess[]>();
+
+function killPlaylistProcs(playlistId: string) {
+  const procs = activeFfmpegProcs.get(playlistId) ?? [];
+  procs.forEach((p) => { try { p.kill("SIGTERM"); } catch { /* already dead */ } });
+  activeFfmpegProcs.delete(playlistId);
+}
 import { google } from "googleapis";
 import { StreamChannelProvider } from "@src/db/types/stream";
 import { GoogleOAuthCredentials, TwitchOAuthCredentials } from "@src/types";
@@ -136,6 +145,7 @@ export class StreamPlaylistService extends BaseService {
     const playlist = await this.models.StreamPlaylist.findById(id);
     if (!playlist) throw new NotFoundError("Playlist not found");
     if ((playlist as any).profileId !== profileId) throw new UnauthorizedError("Not authorized");
+    killPlaylistProcs(id);
     const result = await this.models.StreamPlaylist.start(id);
     this.pushPlaylistToChannels(id, profileId).catch((err) =>
       logger.error("Failed to push playlist to channels", err),
@@ -153,7 +163,9 @@ export class StreamPlaylistService extends BaseService {
     if (!items.length) return;
 
     const title = (playlist as any).title;
+    const repeatCount: number | null = (playlist as any).repeatCount;
     const videoUrls = items.map((item: any) => item.videoUrl);
+    const procs: ChildProcess[] = [];
 
     for (const channel of channels) {
       const provider = (channel as any).channelProvider as string;
@@ -168,11 +180,14 @@ export class StreamPlaylistService extends BaseService {
         }
         if (!endpoint) continue;
         logger.info(`Pushing playlist "${title}" to ${provider}`);
-        this.spawnFfmpegPlaylist(videoUrls, endpoint);
+        const proc = this.spawnFfmpegPlaylist(videoUrls, endpoint, repeatCount);
+        procs.push(proc);
       } catch (err) {
         logger.error(`Failed to push playlist to channel ${(channel as any).id}`, err);
       }
     }
+
+    activeFfmpegProcs.set(playlistId, procs);
   }
 
   private async getYoutubeRtmpEndpoint(channel: any, title: string): Promise<string | null> {
@@ -239,15 +254,19 @@ export class StreamPlaylistService extends BaseService {
     });
   }
 
-  private spawnFfmpegPlaylist(videoUrls: string[], endpoint: string) {
+  private spawnFfmpegPlaylist(videoUrls: string[], endpoint: string, repeatCount: number | null): ChildProcess {
     const concatContent = videoUrls.map((url) => `file '${url}'`).join("\n");
     const tmpFile = path.join(os.tmpdir(), `playlist-${Date.now()}.txt`);
     fs.writeFileSync(tmpFile, concatContent);
+
+    // -stream_loop -1 = infinite, N-1 = play N times total
+    const streamLoop = repeatCount === null ? "-1" : String(Math.max(0, repeatCount - 1));
 
     const proc = spawn(
       "ffmpeg",
       [
         "-re",
+        "-stream_loop", streamLoop,
         "-f", "concat",
         "-safe", "0",
         "-protocol_whitelist", "file,http,https,tcp,tls",
@@ -268,15 +287,18 @@ export class StreamPlaylistService extends BaseService {
       { detached: true, stdio: "ignore" },
     );
     proc.unref();
+    // Clean up temp file after FFmpeg has had time to open it
     setTimeout(() => {
       try { fs.unlinkSync(tmpFile); } catch { /* ignore */ }
-    }, 10000);
+    }, 30000);
+    return proc;
   }
 
   public async stop(id: string, profileId: string) {
     const playlist = await this.models.StreamPlaylist.findById(id);
     if (!playlist) throw new NotFoundError("Playlist not found");
     if ((playlist as any).profileId !== profileId) throw new UnauthorizedError("Not authorized");
+    killPlaylistProcs(id);
     return this.models.StreamPlaylist.stop(id);
   }
 
@@ -284,6 +306,8 @@ export class StreamPlaylistService extends BaseService {
     const playlist = await this.models.StreamPlaylist.findById(id);
     if (!playlist) throw new NotFoundError("Playlist not found");
     if ((playlist as any).profileId !== profileId) throw new UnauthorizedError("Not authorized");
+    // Kill all active FFmpeg processes — this terminates the RTMP push to every connected platform simultaneously
+    killPlaylistProcs(id);
     return this.models.StreamPlaylist.pause(id);
   }
 
@@ -291,7 +315,12 @@ export class StreamPlaylistService extends BaseService {
     const playlist = await this.models.StreamPlaylist.findById(id);
     if (!playlist) throw new NotFoundError("Playlist not found");
     if ((playlist as any).profileId !== profileId) throw new UnauthorizedError("Not authorized");
-    return this.models.StreamPlaylist.resume(id);
+    // Reset to beginning and restart FFmpeg to all channels
+    const result = await this.models.StreamPlaylist.resume(id);
+    this.pushPlaylistToChannels(id, profileId).catch((err) =>
+      logger.error("Failed to restart playlist FFmpeg on resume", err),
+    );
+    return result;
   }
 
   public async advance(id: string, profileId: string) {
