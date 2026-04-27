@@ -218,6 +218,16 @@ export class StreamPlaylistService extends BaseService {
     const procs: ChildProcess[] = [];
     const broadcastMetas: BroadcastMeta[] = [];
 
+    interface ChannelEndpoint {
+      channel: any;
+      provider: string;
+      endpoint: string | null;
+      broadcastId?: string;
+      scheduledStartTime?: string;
+    }
+
+    const endpoints: ChannelEndpoint[] = [];
+
     for (const channel of channels) {
       const provider = (channel as any).channelProvider as string;
       try {
@@ -236,27 +246,36 @@ export class StreamPlaylistService extends BaseService {
           endpoint = await this.getTwitchRtmpEndpoint(channel as any);
         }
 
-        if (!endpoint) {
-          logger.warn(`No RTMP endpoint for channel ${(channel as any).id} (${provider}), skipping`);
-          continue;
-        }
-
-        logger.info(`Pushing playlist "${title}" to ${provider}`);
-        const proc = this.spawnFfmpegPlaylist(videoUrls, endpoint, repeatCount);
-        procs.push(proc);
-
-        broadcastMetas.push({
-          provider,
-          channelId: (channel as any).id,
-          externalId: (channel as any).externalId ?? "",
-          broadcastId,
-          scheduledStartTime,
-          channelData: channel,
-          profileId,
-        });
+        endpoints.push({ channel, provider, endpoint, broadcastId, scheduledStartTime });
       } catch (err) {
-        logger.error(`Failed to push playlist to channel ${(channel as any).id}`, err);
+        logger.error(`Failed to get endpoint for channel ${(channel as any).id}`, err);
       }
+    }
+
+    const validEndpoints = endpoints.filter((ep) => ep.endpoint !== null);
+    logger.info(`Starting synchronized stream to ${validEndpoints.length} platforms`);
+
+    if (validEndpoints.length > 1) {
+      const rtmpEndpoints = validEndpoints.map((ep) => ep.endpoint!);
+      logger.info(`Using synchronized multi-endpoint FFmpeg for ${rtmpEndpoints.length} platforms`);
+      const proc = this.spawnFfmpegMultiEndpoint(videoUrls, rtmpEndpoints, repeatCount);
+      procs.push(proc);
+    } else if (validEndpoints.length === 1) {
+      const proc = this.spawnFfmpegPlaylist(videoUrls, validEndpoints[0].endpoint!, repeatCount);
+      procs.push(proc);
+    }
+
+    for (const ep of validEndpoints) {
+      logger.info(`Pushing playlist "${title}" to ${ep.provider}`);
+      broadcastMetas.push({
+        provider: ep.provider,
+        channelId: ep.channel.id,
+        externalId: ep.channel.externalId ?? "",
+        broadcastId: ep.broadcastId,
+        scheduledStartTime: ep.scheduledStartTime,
+        channelData: ep.channel,
+        profileId,
+      });
     }
 
     activeFfmpegProcs.set(playlistId, procs);
@@ -410,6 +429,44 @@ export class StreamPlaylistService extends BaseService {
       ],
       { detached: true, stdio: "ignore" },
     );
+    proc.unref();
+    setTimeout(() => {
+      try { fs.unlinkSync(tmpFile); } catch { /* ignore */ }
+    }, 30000);
+    return proc;
+  }
+
+  private spawnFfmpegMultiEndpoint(videoUrls: string[], endpoints: string[], repeatCount: number | null): ChildProcess {
+    const concatContent = videoUrls.map((url) => `file '${url}'`).join("\n");
+    const tmpFile = path.join(os.tmpdir(), `playlist-${Date.now()}.txt`);
+    fs.writeFileSync(tmpFile, concatContent);
+
+    const streamLoop = repeatCount === null ? "-1" : String(Math.max(0, repeatCount - 1));
+
+    const ffmpegArgs = [
+      "-re",
+      "-stream_loop", streamLoop,
+      "-f", "concat",
+      "-safe", "0",
+      "-protocol_whitelist", "file,http,https,tcp,tls",
+      "-i", tmpFile,
+      "-c:v", "libx264",
+      "-preset", "veryfast",
+      "-b:v", "6000k",
+      "-maxrate", "6800k",
+      "-bufsize", "13600k",
+      "-pix_fmt", "yuv420p",
+      "-g", "50",
+      "-c:a", "aac",
+      "-b:a", "160k",
+      "-ar", "44100",
+    ];
+
+    for (const endpoint of endpoints) {
+      ffmpegArgs.push("-f", "flv", endpoint);
+    }
+
+    const proc = spawn("ffmpeg", ffmpegArgs, { detached: true, stdio: "ignore" });
     proc.unref();
     setTimeout(() => {
       try { fs.unlinkSync(tmpFile); } catch { /* ignore */ }
