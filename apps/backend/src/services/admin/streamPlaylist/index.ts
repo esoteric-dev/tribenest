@@ -266,6 +266,34 @@ export class StreamPlaylistService extends BaseService {
     return result;
   }
 
+  /* Attaches an exit handler to an FFmpeg process.
+     When the process exits for any reason other than SIGTERM (intentional stop/pause/jump),
+     the playlist is automatically stopped so the DB and UI reflect reality. */
+  private watchFfmpegProc(proc: ChildProcess, playlistId: string): void {
+    proc.on("exit", (code, signal) => {
+      if (signal === "SIGTERM") return; // intentional kill — stop/pause/jump already handles cleanup
+      this.handleUnexpectedFfmpegExit(playlistId).catch((err) =>
+        logger.error(`Failed to handle FFmpeg exit for playlist ${playlistId}`, err),
+      );
+    });
+  }
+
+  private async handleUnexpectedFfmpegExit(playlistId: string): Promise<void> {
+    // Brief delay so any in-flight intentional stop can finish cleaning up first
+    await new Promise((r) => setTimeout(r, 1500));
+
+    // If the playlist was intentionally stopped/paused, the proc map entry is gone — do nothing
+    if (!activeFfmpegProcs.has(playlistId)) return;
+
+    const playlist = await this.models.StreamPlaylist.findById(playlistId);
+    if (!playlist || (playlist as any).status !== "live") return;
+
+    logger.info(`FFmpeg for playlist ${playlistId} exited unexpectedly — auto-stopping playlist`);
+    killPlaylistProcs(playlistId);
+    activeBroadcasts.delete(playlistId);
+    await this.models.StreamPlaylist.stop(playlistId);
+  }
+
   /* Re-spawns FFmpeg for all connected channels from a given video index */
   private async restartFfmpeg(
     playlistId: string,
@@ -309,9 +337,13 @@ export class StreamPlaylistService extends BaseService {
     }
 
     if (endpoints.length > 1) {
-      procs.push(this.spawnFfmpegMultiEndpoint(allUrls, endpoints, repeatCount, startIndex, loopCurrent));
+      const proc = this.spawnFfmpegMultiEndpoint(allUrls, endpoints, repeatCount, startIndex, loopCurrent);
+      this.watchFfmpegProc(proc, playlistId);
+      procs.push(proc);
     } else {
-      procs.push(this.spawnFfmpegPlaylist(allUrls, endpoints[0], repeatCount, startIndex, loopCurrent));
+      const proc = this.spawnFfmpegPlaylist(allUrls, endpoints[0], repeatCount, startIndex, loopCurrent);
+      this.watchFfmpegProc(proc, playlistId);
+      procs.push(proc);
     }
 
     activeFfmpegProcs.set(playlistId, procs);
@@ -379,9 +411,11 @@ export class StreamPlaylistService extends BaseService {
     if (validEndpoints.length > 1) {
       const rtmpEndpoints = validEndpoints.map((ep) => ep.endpoint!);
       const proc = this.spawnFfmpegMultiEndpoint(videoUrls, rtmpEndpoints, repeatCount, startIndex, loopCurrent);
+      this.watchFfmpegProc(proc, playlistId);
       procs.push(proc);
     } else if (validEndpoints.length === 1) {
       const proc = this.spawnFfmpegPlaylist(videoUrls, validEndpoints[0].endpoint!, repeatCount, startIndex, loopCurrent);
+      this.watchFfmpegProc(proc, playlistId);
       procs.push(proc);
     }
 
