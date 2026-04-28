@@ -74,13 +74,16 @@ export class StreamPlaylistModel {
   }
 
   async start(id: string) {
+    const now = new Date();
     return this.client
       .updateTable("streamPlaylists" as any)
       .set({
         status: "live",
         currentRepeat: 0,
         currentVideoIndex: 0,
-        currentVideoStartedAt: new Date(),
+        currentVideoStartedAt: now,
+        liveStartedAt: now,
+        loopCurrentVideo: false,
       })
       .where("id", "=", id)
       .returningAll()
@@ -90,7 +93,7 @@ export class StreamPlaylistModel {
   async stop(id: string) {
     return this.client
       .updateTable("streamPlaylists" as any)
-      .set({ status: "ended" })
+      .set({ status: "ended", liveStartedAt: null, loopCurrentVideo: false })
       .where("id", "=", id)
       .returningAll()
       .executeTakeFirst();
@@ -106,9 +109,28 @@ export class StreamPlaylistModel {
   }
 
   async resume(id: string) {
+    const now = new Date();
     return this.client
       .updateTable("streamPlaylists" as any)
-      .set({ status: "live", currentVideoIndex: 0, currentRepeat: 0, currentVideoStartedAt: new Date() })
+      .set({ status: "live", currentVideoIndex: 0, currentRepeat: 0, currentVideoStartedAt: now, liveStartedAt: now, loopCurrentVideo: false })
+      .where("id", "=", id)
+      .returningAll()
+      .executeTakeFirst();
+  }
+
+  async setLoopCurrentVideo(id: string, loop: boolean) {
+    return this.client
+      .updateTable("streamPlaylists" as any)
+      .set({ loopCurrentVideo: loop })
+      .where("id", "=", id)
+      .returningAll()
+      .executeTakeFirst();
+  }
+
+  async jumpToVideo(id: string, videoIndex: number, loop: boolean) {
+    return this.client
+      .updateTable("streamPlaylists" as any)
+      .set({ currentVideoIndex: videoIndex, currentVideoStartedAt: new Date(), loopCurrentVideo: loop })
       .where("id", "=", id)
       .returningAll()
       .executeTakeFirst();

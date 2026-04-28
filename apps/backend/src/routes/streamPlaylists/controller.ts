@@ -115,4 +115,17 @@ export class StreamPlaylistsController extends BaseController {
     const profileId = req.query.profileId as string;
     return this.services.admin.streamPlaylist.advance(req.params.id, profileId);
   }
+
+  @RouteHandler()
+  async toggleLoop(req: Request, _: Response, __: NextFunction): Promise<any> {
+    const profileId = req.query.profileId as string;
+    return this.services.admin.streamPlaylist.toggleLoop(req.params.id, profileId);
+  }
+
+  @RouteHandler()
+  async playVideo(req: Request, _: Response, __: NextFunction): Promise<any> {
+    const profileId = req.query.profileId as string;
+    const videoIndex = Number(req.body.videoIndex);
+    return this.services.admin.streamPlaylist.jumpToVideo(req.params.id, profileId, videoIndex);
+  }
 }

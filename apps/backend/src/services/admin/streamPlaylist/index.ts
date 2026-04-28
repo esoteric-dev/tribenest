@@ -25,15 +25,35 @@ function killPlaylistProcs(playlistId: string) {
 interface BroadcastMeta {
   provider: string;
   channelId: string;
-  externalId: string;          // Twitch broadcasterId
-  broadcastId?: string;        // YouTube broadcast ID
-  scheduledStartTime?: string; // needed for YouTube snippet update
-  channelData: any;            // raw DB channel row (for re-auth)
+  externalId: string;
+  broadcastId?: string;
+  scheduledStartTime?: string;
+  channelData: any;
   profileId: string;
 }
 
-// playlistId → metadata for every connected channel
 const activeBroadcasts = new Map<string, BroadcastMeta[]>();
+
+/* ── Playlist shape returned to clients ─────────────── */
+
+function playlistShape(p: any, items: any[]) {
+  return {
+    id: p.id,
+    title: p.title,
+    status: p.status,
+    repeatCount: p.repeatCount,
+    currentRepeat: p.currentRepeat,
+    currentVideoIndex: p.currentVideoIndex,
+    currentVideoStartedAt: p.currentVideoStartedAt,
+    liveStartedAt: p.liveStartedAt ?? null,
+    loopCurrentVideo: p.loopCurrentVideo ?? false,
+    scheduledStartAt: p.scheduledStartAt,
+    scheduledEndAt: p.scheduledEndAt,
+    createdAt: p.createdAt,
+    updatedAt: p.updatedAt,
+    items,
+  };
+}
 
 /* ── Service ─────────────────────────────────────────── */
 
@@ -93,7 +113,7 @@ export class StreamPlaylistService extends BaseService {
     return Promise.all(
       playlists.map(async (p: any) => {
         const items = await this.models.StreamPlaylistItem.listByPlaylist(p.id);
-        return { ...p, items };
+        return playlistShape(p, items);
       }),
     );
   }
@@ -103,7 +123,7 @@ export class StreamPlaylistService extends BaseService {
     if (!playlist) throw new NotFoundError("Playlist not found");
     if ((playlist as any).profileId !== profileId) throw new UnauthorizedError("Not authorized");
     const items = await this.models.StreamPlaylistItem.listByPlaylist(id);
-    return { ...playlist, items };
+    return playlistShape(playlist, items);
   }
 
   public async update(id: string, profileId: string, data: {
@@ -164,7 +184,6 @@ export class StreamPlaylistService extends BaseService {
 
     const updated = await this.models.StreamPlaylistItem.update(itemId, data);
 
-    // If the playlist is live and this is the currently playing video, push description update now
     const p = playlist as any;
     if (p.status === "live") {
       const items = await this.models.StreamPlaylistItem.listByPlaylist(playlistId);
@@ -195,13 +214,115 @@ export class StreamPlaylistService extends BaseService {
     killPlaylistProcs(id);
     activeBroadcasts.delete(id);
     const result = await this.models.StreamPlaylist.start(id);
-    this.pushPlaylistToChannels(id, profileId).catch((err) =>
+    this.pushPlaylistToChannels(id, profileId, 0, false).catch((err) =>
       logger.error("Failed to push playlist to channels", err),
     );
     return result;
   }
 
-  private async pushPlaylistToChannels(playlistId: string, profileId: string) {
+  /* Jumps to a specific video in a live playlist and restarts FFmpeg */
+  public async jumpToVideo(id: string, profileId: string, videoIndex: number) {
+    const playlist = await this.models.StreamPlaylist.findById(id);
+    if (!playlist) throw new NotFoundError("Playlist not found");
+    if ((playlist as any).profileId !== profileId) throw new UnauthorizedError("Not authorized");
+    const p = playlist as any;
+    if (p.status !== "live") return playlist;
+
+    const items = await this.models.StreamPlaylistItem.listByPlaylist(id);
+    if (videoIndex < 0 || videoIndex >= items.length) throw new NotFoundError("Video index out of range");
+
+    const result = await this.models.StreamPlaylist.jumpToVideo(id, videoIndex, p.loopCurrentVideo);
+
+    killPlaylistProcs(id);
+    this.restartFfmpeg(id, profileId, items, videoIndex, p.loopCurrentVideo).catch((err) =>
+      logger.error("Failed to restart FFmpeg after jump", err),
+    );
+
+    const nextItem = items[videoIndex] as any;
+    if (nextItem) {
+      this.updatePlatformDescriptions(id, nextItem.title, nextItem.description ?? "").catch(() => {});
+    }
+
+    return result;
+  }
+
+  /* Toggles infinite loop on the current video */
+  public async toggleLoop(id: string, profileId: string) {
+    const playlist = await this.models.StreamPlaylist.findById(id);
+    if (!playlist) throw new NotFoundError("Playlist not found");
+    if ((playlist as any).profileId !== profileId) throw new UnauthorizedError("Not authorized");
+    const p = playlist as any;
+    if (p.status !== "live") return playlist;
+
+    const newLoop = !p.loopCurrentVideo;
+    const result = await this.models.StreamPlaylist.setLoopCurrentVideo(id, newLoop);
+
+    const items = await this.models.StreamPlaylistItem.listByPlaylist(id);
+    killPlaylistProcs(id);
+    this.restartFfmpeg(id, profileId, items, p.currentVideoIndex, newLoop).catch((err) =>
+      logger.error("Failed to restart FFmpeg after loop toggle", err),
+    );
+
+    return result;
+  }
+
+  /* Re-spawns FFmpeg for all connected channels from a given video index */
+  private async restartFfmpeg(
+    playlistId: string,
+    profileId: string,
+    items: any[],
+    startIndex: number,
+    loopCurrent: boolean,
+  ) {
+    const metas = activeBroadcasts.get(playlistId);
+    if (!metas || metas.length === 0) return;
+
+    const playlist = await this.models.StreamPlaylist.findById(playlistId);
+    if (!playlist) return;
+    const repeatCount: number | null = (playlist as any).repeatCount;
+
+    const allUrls = items.map((item: any) => item.videoUrl);
+    const procs: ChildProcess[] = [];
+
+    const endpoints = metas.map((m) => {
+      if (m.provider === StreamChannelProvider.CustomRTMP) {
+        return m.channelData.currentEndpoint as string | null;
+      }
+      // For YouTube/Twitch we already have an active stream endpoint stored — we can't easily
+      // get the RTMP URL back from the meta, so we fall back to re-ingesting via the stored endpoint.
+      // The broadcast is still live; we just need to reconnect FFmpeg to the same ingest URL.
+      return (m.channelData as any).currentEndpoint as string | null;
+    }).filter((ep): ep is string => ep !== null);
+
+    // Fallback: if we don't have endpoints stored in channelData, re-fetch from DB
+    if (endpoints.length === 0) {
+      const channels = await this.models.StreamChannel.find({ profileId } as any);
+      for (const channel of (channels ?? [])) {
+        const ep = (channel as any).currentEndpoint as string | null;
+        if (ep) endpoints.push(ep);
+      }
+    }
+
+    if (endpoints.length === 0) {
+      logger.warn(`restartFfmpeg: no endpoints found for playlist ${playlistId}`);
+      return;
+    }
+
+    if (endpoints.length > 1) {
+      procs.push(this.spawnFfmpegMultiEndpoint(allUrls, endpoints, repeatCount, startIndex, loopCurrent));
+    } else {
+      procs.push(this.spawnFfmpegPlaylist(allUrls, endpoints[0], repeatCount, startIndex, loopCurrent));
+    }
+
+    activeFfmpegProcs.set(playlistId, procs);
+  }
+
+  private async pushPlaylistToChannels(
+    playlistId: string,
+    profileId: string,
+    startIndex: number = 0,
+    loopCurrent: boolean = false,
+  ) {
     const channels = await this.models.StreamChannel.find({ profileId } as any);
     if (!channels || channels.length === 0) return;
 
@@ -213,7 +334,7 @@ export class StreamPlaylistService extends BaseService {
     const title = (playlist as any).title;
     const repeatCount: number | null = (playlist as any).repeatCount;
     const videoUrls = items.map((item: any) => item.videoUrl);
-    const firstDescription: string = (items[0] as any).description ?? "";
+    const firstDescription: string = (items[startIndex] as any)?.description ?? (items[0] as any).description ?? "";
 
     const procs: ChildProcess[] = [];
     const broadcastMetas: BroadcastMeta[] = [];
@@ -257,11 +378,10 @@ export class StreamPlaylistService extends BaseService {
 
     if (validEndpoints.length > 1) {
       const rtmpEndpoints = validEndpoints.map((ep) => ep.endpoint!);
-      logger.info(`Using synchronized multi-endpoint FFmpeg for ${rtmpEndpoints.length} platforms`);
-      const proc = this.spawnFfmpegMultiEndpoint(videoUrls, rtmpEndpoints, repeatCount);
+      const proc = this.spawnFfmpegMultiEndpoint(videoUrls, rtmpEndpoints, repeatCount, startIndex, loopCurrent);
       procs.push(proc);
     } else if (validEndpoints.length === 1) {
-      const proc = this.spawnFfmpegPlaylist(videoUrls, validEndpoints[0].endpoint!, repeatCount);
+      const proc = this.spawnFfmpegPlaylist(videoUrls, validEndpoints[0].endpoint!, repeatCount, startIndex, loopCurrent);
       procs.push(proc);
     }
 
@@ -282,7 +402,6 @@ export class StreamPlaylistService extends BaseService {
     activeBroadcasts.set(playlistId, broadcastMetas);
   }
 
-  /* Creates a YouTube broadcast and returns endpoint + broadcast ID */
   private async createYoutubeBroadcast(channel: any, title: string, description: string): Promise<{ endpoint: string; broadcastId: string; scheduledStartTime: string } | null> {
     const credentials = channel.credentials as GoogleOAuthCredentials;
     const decrypted = this.apis.encryption.decryptObject(credentials, ["access_token", "refresh_token"]);
@@ -326,7 +445,6 @@ export class StreamPlaylistService extends BaseService {
     };
   }
 
-  /* Updates description on all connected platforms for the currently playing video */
   private async updatePlatformDescriptions(playlistId: string, videoTitle: string, description: string) {
     const metas = activeBroadcasts.get(playlistId);
     if (!metas || metas.length === 0) return;
@@ -356,7 +474,6 @@ export class StreamPlaylistService extends BaseService {
           const decrypted = this.apis.encryption.decryptObject(credentials, ["access_token", "refresh_token"]);
           const validated = await this.apis.twitch.validateAndRefreshToken(decrypted as TwitchOAuthCredentials);
           if (validated.credentials) {
-            // Twitch has no broadcast description — update stream title with the video title
             await this.apis.twitch.updateChannelInfo({
               credentials: validated.credentials as TwitchOAuthCredentials,
               broadcasterId: meta.externalId,
@@ -397,13 +514,19 @@ export class StreamPlaylistService extends BaseService {
     });
   }
 
-  private spawnFfmpegPlaylist(videoUrls: string[], endpoint: string, repeatCount: number | null): ChildProcess {
-    const concatContent = videoUrls.map((url) => `file '${url}'`).join("\n");
+  private spawnFfmpegPlaylist(
+    videoUrls: string[],
+    endpoint: string,
+    repeatCount: number | null,
+    startIndex: number = 0,
+    loopCurrent: boolean = false,
+  ): ChildProcess {
+    const videos = loopCurrent ? [videoUrls[startIndex]] : videoUrls.slice(startIndex);
+    const concatContent = videos.map((url) => `file '${url}'`).join("\n");
     const tmpFile = path.join(os.tmpdir(), `playlist-${Date.now()}.txt`);
     fs.writeFileSync(tmpFile, concatContent);
 
-    // -stream_loop -1 = infinite, N-1 = play N times total
-    const streamLoop = repeatCount === null ? "-1" : String(Math.max(0, repeatCount - 1));
+    const streamLoop = loopCurrent ? "-1" : (repeatCount === null ? "-1" : String(Math.max(0, repeatCount - 1)));
 
     const proc = spawn(
       "ffmpeg",
@@ -436,12 +559,19 @@ export class StreamPlaylistService extends BaseService {
     return proc;
   }
 
-  private spawnFfmpegMultiEndpoint(videoUrls: string[], endpoints: string[], repeatCount: number | null): ChildProcess {
-    const concatContent = videoUrls.map((url) => `file '${url}'`).join("\n");
+  private spawnFfmpegMultiEndpoint(
+    videoUrls: string[],
+    endpoints: string[],
+    repeatCount: number | null,
+    startIndex: number = 0,
+    loopCurrent: boolean = false,
+  ): ChildProcess {
+    const videos = loopCurrent ? [videoUrls[startIndex]] : videoUrls.slice(startIndex);
+    const concatContent = videos.map((url) => `file '${url}'`).join("\n");
     const tmpFile = path.join(os.tmpdir(), `playlist-${Date.now()}.txt`);
     fs.writeFileSync(tmpFile, concatContent);
 
-    const streamLoop = repeatCount === null ? "-1" : String(Math.max(0, repeatCount - 1));
+    const streamLoop = loopCurrent ? "-1" : (repeatCount === null ? "-1" : String(Math.max(0, repeatCount - 1)));
 
     const ffmpegArgs = [
       "-re",
@@ -497,7 +627,7 @@ export class StreamPlaylistService extends BaseService {
     if ((playlist as any).profileId !== profileId) throw new UnauthorizedError("Not authorized");
     activeBroadcasts.delete(id);
     const result = await this.models.StreamPlaylist.resume(id);
-    this.pushPlaylistToChannels(id, profileId).catch((err) =>
+    this.pushPlaylistToChannels(id, profileId, 0, false).catch((err) =>
       logger.error("Failed to restart playlist FFmpeg on resume", err),
     );
     return result;
@@ -535,6 +665,9 @@ export class StreamPlaylistService extends BaseService {
     const p = playlist as any;
     if (p.status !== "live") return playlist;
 
+    // Don't auto-advance when looping the current video
+    if (p.loopCurrentVideo) return playlist;
+
     if (expectedIndex !== undefined && p.currentVideoIndex !== expectedIndex) {
       return playlist;
     }
@@ -553,7 +686,6 @@ export class StreamPlaylistService extends BaseService {
         result = await this.models.StreamPlaylist.stop(playlistId);
       } else {
         result = await this.models.StreamPlaylist.advance(playlistId, 0, nextRepeat, "live");
-        // Push description for the first video (we wrapped around)
         const nextItem = items[0] as any;
         if (nextItem) {
           this.updatePlatformDescriptions(playlistId, nextItem.title, nextItem.description ?? "").catch(() => {});
@@ -561,7 +693,6 @@ export class StreamPlaylistService extends BaseService {
       }
     } else {
       result = await this.models.StreamPlaylist.advance(playlistId, nextIndex, p.currentRepeat, "live");
-      // Push description for the upcoming video
       const nextItem = items[nextIndex] as any;
       if (nextItem) {
         this.updatePlatformDescriptions(playlistId, nextItem.title, nextItem.description ?? "").catch(() => {});
@@ -578,14 +709,7 @@ export class StreamPlaylistService extends BaseService {
     const items = await this.models.StreamPlaylistItem.listByPlaylist(p.id);
     const currentItem = items[p.currentVideoIndex] ?? items[0] ?? null;
     return {
-      id: p.id,
-      title: p.title,
-      status: p.status,
-      repeatCount: p.repeatCount,
-      currentRepeat: p.currentRepeat,
-      currentVideoIndex: p.currentVideoIndex,
-      currentVideoStartedAt: p.currentVideoStartedAt,
-      items,
+      ...playlistShape(p, items),
       currentItem,
       totalVideos: items.length,
     };

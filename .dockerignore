@@ -7,8 +7,10 @@ yarn-error.log*
 # Production builds
 apps/*/dist
 apps/*/build
-apps/*/.next
 apps/*/out
+!apps/backend/build
+!apps/admin/dist
+!apps/client/.next
 
 # Environment files
 .env
@@ -63,6 +65,7 @@ jspm_packages/
 .parcel-cache
 
 # Next.js build output
+!.next
 .next
 
 # Nuxt.js build / generate output

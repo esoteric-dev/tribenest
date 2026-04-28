@@ -32,6 +32,8 @@ const init: InitRouteFunction = ({ services, workers }) => {
   router.post("/:id/pause", (...args) => controller.pause(...args));
   router.post("/:id/resume", (...args) => controller.resume(...args));
   router.post("/:id/advance", (...args) => controller.advance(...args));
+  router.post("/:id/toggle-loop", (...args) => controller.toggleLoop(...args));
+  router.post("/:id/play-video", (...args) => controller.playVideo(...args));
 
   return router;
 };

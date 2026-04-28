@@ -71,7 +71,7 @@ case "$1" in
     else
       # Build applications locally first
       echo "🔨 Building applications locally first..."
-      ./scripts/build.sh
+      npm run build
     fi
     
     # Build Docker image

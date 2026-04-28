@@ -8,7 +8,7 @@ import { useCreatorAuth } from "../../../../_contexts/creator-auth";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 type PlaylistVideo = { id: string; playlistId: string; title: string; videoUrl: string; videoFilename: string; position: number; description?: string | null };
-type StreamPlaylist = { id: string; title: string; status: "idle" | "live" | "paused" | "ended"; repeatCount: number | null; currentRepeat: number; currentVideoIndex: number; scheduledStartAt: string | null; scheduledEndAt: string | null; items: PlaylistVideo[] };
+type StreamPlaylist = { id: string; title: string; status: "idle" | "live" | "paused" | "ended"; repeatCount: number | null; currentRepeat: number; currentVideoIndex: number; scheduledStartAt: string | null; scheduledEndAt: string | null; currentVideoStartedAt: string | null; liveStartedAt: string | null; loopCurrentVideo: boolean; items: PlaylistVideo[] };
 type StreamChannel = { id: string; title: string; channelProvider: "youtube" | "twitch" | "custom_rtmp"; currentEndpoint: string | null; externalId: string | null };
 
 const PLATFORMS = [
@@ -280,12 +280,37 @@ function StudioLiveView({ livePlaylist, channels, profile, token, actionLoading,
 }) {
   const [activeTab, setActiveTab] = useState<"playlist" | "settings" | "platforms">("playlist");
   const [elapsed, setElapsed] = useState(0);
+  const [controlLoading, setControlLoading] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const isLive   = livePlaylist.status === "live";
-  const isPaused = livePlaylist.status === "paused";
-  const currentItem = livePlaylist.items?.[livePlaylist.currentVideoIndex] ?? null;
+  const startTimeRef = useRef<number>(0);
 
-  useEffect(() => { const t = setInterval(() => setElapsed((e) => e + 1), 1000); return () => clearInterval(t); }, []);
+  const isLive = livePlaylist.status === "live";
+  const isPaused = livePlaylist.status === "paused";
+  const currentItem = livePlaylist.items[livePlaylist.currentVideoIndex] ?? null;
+  const isLooping = livePlaylist.loopCurrentVideo;
+
+  const api = useCallback(
+    () => axios.create({ baseURL: API_URL, headers: { authorization: `Bearer ${token}` } }),
+    [token],
+  );
+
+  useEffect(() => {
+    if (!livePlaylist.liveStartedAt) {
+      startTimeRef.current = 0;
+      setElapsed(0);
+      return;
+    }
+    startTimeRef.current = new Date(livePlaylist.liveStartedAt).getTime();
+    setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
+  }, [livePlaylist.liveStartedAt]);
+
+  useEffect(() => {
+    if (!isLive || startTimeRef.current === 0) return;
+    const t = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
+    }, 1000);
+    return () => clearInterval(t);
+  }, [isLive]);
 
   useEffect(() => {
     if (!videoRef.current || !currentItem?.videoUrl) return;
@@ -296,12 +321,27 @@ function StudioLiveView({ livePlaylist, channels, profile, token, actionLoading,
     }
   }, [currentItem?.videoUrl]);
 
+  const doToggleLoop = async () => {
+    setControlLoading("loop");
+    try {
+      await api().post(`/stream-playlists/${livePlaylist.id}/toggle-loop?profileId=${profile.id}`);
+      onRefresh();
+    } catch { /* ignore */ } finally { setControlLoading(null); }
+  };
+
+  const doPlayVideo = async (videoIndex: number) => {
+    setControlLoading(`play-${videoIndex}`);
+    try {
+      await api().post(`/stream-playlists/${livePlaylist.id}/play-video?profileId=${profile.id}`, { videoIndex });
+      onRefresh();
+    } catch { /* ignore */ } finally { setControlLoading(null); }
+  };
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
 
       {/* ── Top stats bar ── */}
       <div className="flex-shrink-0 h-[52px] border-b border-[#272727] px-4 flex items-center gap-3 bg-[#0f0f0f]">
-        {/* Live / Paused badge + timer */}
         {isLive ? (
           <>
             <span className="px-2 py-0.5 rounded bg-[#cc0000] text-white text-xs font-bold tracking-wider">LIVE</span>
@@ -311,14 +351,16 @@ function StudioLiveView({ livePlaylist, channels, profile, token, actionLoading,
           <span className="px-2 py-0.5 rounded bg-yellow-600 text-white text-xs font-bold">PAUSED</span>
         )}
 
-        <div className="w-px h-4 bg-[#303030] mx-1" />
+        {isLive && isLooping && (
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-blue-600/20 border border-blue-500/30 text-blue-400 text-xs font-semibold">
+            ↻ Looping
+          </span>
+        )}
 
-        {/* Stream title */}
+        <div className="w-px h-4 bg-[#303030] mx-1" />
         <span className="text-sm text-[#aaa] truncate max-w-[180px]">{livePlaylist.title}</span>
-
         <div className="w-px h-4 bg-[#303030] mx-1" />
 
-        {/* Platform chips */}
         <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-hidden">
           {channels.length === 0
             ? <span className="text-xs text-[#555]">No platforms connected</span>
@@ -331,7 +373,6 @@ function StudioLiveView({ livePlaylist, channels, profile, token, actionLoading,
           }
         </div>
 
-        {/* Controls */}
         <div className="flex items-center gap-2 flex-shrink-0">
           {isLive && (
             <button onClick={onPause} disabled={!!actionLoading}
@@ -355,7 +396,7 @@ function StudioLiveView({ livePlaylist, channels, profile, token, actionLoading,
       {/* ── Two-column main ── */}
       <div className="flex-1 flex overflow-hidden">
 
-        {/* Left: video + tabs */}
+        {/* Left: video preview + tabs */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden border-r border-[#272727]">
 
           {/* Video preview */}
@@ -366,11 +407,11 @@ function StudioLiveView({ livePlaylist, channels, profile, token, actionLoading,
               <div className="w-full h-full flex items-center justify-center text-[#555] text-sm">No video loaded</div>
             )}
 
-            {/* Status badge (top-left) */}
             <div className="absolute top-3 left-3">
               {isLive ? (
                 <span className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-black/70 text-xs font-semibold text-white border border-white/10 backdrop-blur-sm">
-                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" /> Streaming
+                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                  {isLooping ? "Looping" : "Streaming"}
                 </span>
               ) : (
                 <span className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-black/70 text-xs font-semibold text-yellow-400 border border-yellow-500/30 backdrop-blur-sm">
@@ -379,14 +420,34 @@ function StudioLiveView({ livePlaylist, channels, profile, token, actionLoading,
               )}
             </div>
 
-            {/* Playlist selector (top-right) */}
+            {currentItem && (
+              <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2">
+                <span className="flex-1 px-3 py-1.5 rounded bg-black/70 border border-white/10 backdrop-blur-sm text-xs text-white truncate">
+                  {currentItem.title}
+                </span>
+                {isLive && (
+                  <button
+                    onClick={doToggleLoop}
+                    disabled={controlLoading === "loop"}
+                    title={isLooping ? "Stop looping — advance when video ends" : "Loop this video until you manually advance"}
+                    className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded backdrop-blur-sm border text-xs font-semibold transition-all disabled:opacity-50 ${
+                      isLooping
+                        ? "bg-blue-600/80 border-blue-500/50 text-white hover:bg-blue-500/80"
+                        : "bg-black/70 border-white/10 text-[#aaa] hover:text-white hover:border-white/30"
+                    }`}
+                  >
+                    ↻ {isLooping ? "Looping" : "Loop"}
+                  </button>
+                )}
+              </div>
+            )}
+
             <div className="absolute top-3 right-3 flex items-center gap-2 px-3 py-1.5 rounded bg-black/70 border border-white/10 backdrop-blur-sm">
               <span className="text-xs text-white max-w-[160px] truncate">{livePlaylist.title}</span>
               <button onClick={onRefresh} className="text-[#aaa] hover:text-white text-sm transition-colors" title="Refresh">⟳</button>
             </div>
           </div>
 
-          {/* Paused alert bar */}
           {isPaused && (
             <div className="flex-shrink-0 px-4 py-2.5 bg-[#332900] border-b border-yellow-700/40 flex items-center gap-3">
               <span className="text-yellow-400 text-lg flex-shrink-0">⚠</span>
@@ -398,7 +459,6 @@ function StudioLiveView({ livePlaylist, channels, profile, token, actionLoading,
             </div>
           )}
 
-          {/* Tabs */}
           <div className="flex-shrink-0 flex border-b border-[#272727] bg-[#0f0f0f]">
             {(["playlist", "settings", "platforms"] as const).map((tab) => (
               <button key={tab} onClick={() => setActiveTab(tab)}
@@ -408,20 +468,18 @@ function StudioLiveView({ livePlaylist, channels, profile, token, actionLoading,
             ))}
           </div>
 
-          {/* Tab content */}
           <div className="flex-1 overflow-auto bg-[#0f0f0f]">
-            {activeTab === "playlist"  && <PlaylistTab  livePlaylist={livePlaylist} profileId={profile.id} token={token} onRefresh={onRefresh} />}
+            {activeTab === "playlist"  && <PlaylistTab  livePlaylist={livePlaylist} profileId={profile.id} token={token} onRefresh={onRefresh} onPlayVideo={doPlayVideo} controlLoading={controlLoading} />}
             {activeTab === "settings"  && <SettingsTab  livePlaylist={livePlaylist} />}
             {activeTab === "platforms" && <PlatformsTab channels={channels} />}
           </div>
         </div>
 
-        {/* Right: playlist queue (like YouTube's chat panel) */}
+        {/* Right: live queue panel */}
         <div className="w-[340px] flex-shrink-0 flex flex-col overflow-hidden bg-[#0f0f0f]">
-          {/* Header */}
           <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#272727]">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold">Playlist Queue</span>
+              <span className="text-sm font-semibold">Queue</span>
               <span className="text-xs text-[#717171]">{livePlaylist.repeatCount !== null ? `×${livePlaylist.repeatCount}` : "∞ loop"}</span>
             </div>
             {livePlaylist.repeatCount !== null && (
@@ -429,25 +487,41 @@ function StudioLiveView({ livePlaylist, channels, profile, token, actionLoading,
             )}
           </div>
 
-          {/* Video queue */}
           <div className="flex-1 overflow-auto">
             {(livePlaylist.items ?? []).length === 0 ? (
               <div className="flex items-center justify-center h-full text-sm text-[#555]">No videos in queue</div>
             ) : (
               (livePlaylist.items ?? []).map((video, idx) => {
                 const isCurrent = idx === livePlaylist.currentVideoIndex;
+                const isPlayLoading = controlLoading === `play-${idx}`;
                 return (
-                  <div key={video.id} className={`px-4 py-3 border-b border-[#1a1a1a] transition-colors ${isCurrent ? "bg-[#1a1a1a]" : "hover:bg-[#111]"}`}>
+                  <div key={video.id} className={`group px-4 py-3 border-b border-[#1a1a1a] transition-colors ${isCurrent ? "bg-[#1a1a1a]" : "hover:bg-[#111]"}`}>
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded flex items-center justify-center text-xs font-bold flex-shrink-0 ${isCurrent ? "bg-[#cc0000] text-white" : "bg-[#272727] text-[#aaa]"}`}>
-                        {isCurrent && isLive ? "▶" : idx + 1}
+                        {isCurrent && isLive ? (isLooping ? "↻" : "▶") : idx + 1}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm truncate ${isCurrent ? "text-white font-medium" : "text-[#aaa]"}`}>{video.title}</p>
-                        {isCurrent && <p className="text-xs text-[#cc0000] mt-0.5">{isLive ? "Now streaming" : "Paused"}</p>}
+                        {isCurrent && (
+                          <p className={`text-xs mt-0.5 ${isLooping ? "text-blue-400" : "text-[#cc0000]"}`}>
+                            {isLive ? (isLooping ? "↻ Looping" : "Now streaming") : "Paused"}
+                          </p>
+                        )}
                       </div>
+                      {isLive && !isCurrent && (
+                        <button
+                          onClick={() => doPlayVideo(idx)}
+                          disabled={!!controlLoading}
+                          title="Play this video now"
+                          className="flex-shrink-0 opacity-0 group-hover:opacity-100 flex items-center gap-1 px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-all disabled:opacity-30"
+                        >
+                          {isPlayLoading ? "…" : "▶ Play"}
+                        </button>
+                      )}
                       {isCurrent && isLive && (
-                        <span className="flex-shrink-0 px-1.5 py-0.5 rounded bg-[#cc0000]/20 text-[#ff4444] text-[10px] font-semibold border border-[#cc0000]/20">LIVE</span>
+                        <span className={`flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${isLooping ? "bg-blue-600/20 text-blue-400 border-blue-500/20" : "bg-[#cc0000]/20 text-[#ff4444] border-[#cc0000]/20"}`}>
+                          {isLooping ? "↻" : "LIVE"}
+                        </span>
                       )}
                     </div>
                     {video.description && (
@@ -459,10 +533,16 @@ function StudioLiveView({ livePlaylist, channels, profile, token, actionLoading,
             )}
           </div>
 
-          {/* Queue footer */}
           <div className="flex-shrink-0 border-t border-[#272727] px-4 py-2.5 flex items-center justify-between">
             <span className="text-xs text-[#555]">{livePlaylist.items?.length ?? 0} video{livePlaylist.items?.length !== 1 ? "s" : ""}</span>
-            <span className="text-xs flex items-center gap-1.5">{isLive ? <><span className="w-1.5 h-1.5 rounded-full bg-[#cc0000] animate-pulse" /> Streaming</> : <><span className="w-1.5 h-1.5 rounded-full bg-yellow-500" /> Paused</>}</span>
+            <span className="text-xs flex items-center gap-1.5">
+              {isLive
+                ? isLooping
+                  ? <><span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> Looping</>
+                  : <><span className="w-1.5 h-1.5 rounded-full bg-[#cc0000] animate-pulse" /> Streaming</>
+                : <><span className="w-1.5 h-1.5 rounded-full bg-yellow-500" /> Paused</>
+              }
+            </span>
           </div>
         </div>
       </div>
@@ -471,12 +551,16 @@ function StudioLiveView({ livePlaylist, channels, profile, token, actionLoading,
 }
 
 /* ── Playlist tab ───────────────────────────────────── */
-function PlaylistTab({ livePlaylist, profileId, token, onRefresh }: { livePlaylist: StreamPlaylist; profileId: string; token: string; onRefresh: () => void }) {
+function PlaylistTab({ livePlaylist, profileId, token, onRefresh, onPlayVideo, controlLoading }: {
+  livePlaylist: StreamPlaylist; profileId: string; token: string; onRefresh: () => void;
+  onPlayVideo: (idx: number) => void; controlLoading: string | null;
+}) {
   const [addOpen, setAddOpen] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const api = axios.create({ baseURL: API_URL, headers: { authorization: `Bearer ${token}` } });
   const isLive = livePlaylist.status === "live";
+  const isLooping = livePlaylist.loopCurrentVideo;
 
   const removeVideo = async (videoId: string) => {
     setRemovingId(videoId);
@@ -489,14 +573,30 @@ function PlaylistTab({ livePlaylist, profileId, token, onRefresh }: { livePlayli
       {(livePlaylist.items ?? []).map((video, idx) => {
         const isCurrent = idx === livePlaylist.currentVideoIndex;
         const isEditing = editingId === video.id;
+        const isPlayLoading = controlLoading === `play-${idx}`;
         return (
-          <div key={video.id} className={`px-3 py-2.5 rounded-lg transition-colors ${isCurrent ? "bg-white/5 border border-white/10" : "hover:bg-white/[0.03]"}`}>
+          <div key={video.id} className={`group px-3 py-2.5 rounded-lg transition-colors ${isCurrent ? "bg-white/5 border border-white/10" : "hover:bg-white/[0.03]"}`}>
             <div className="flex items-center gap-3">
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${isCurrent ? "bg-[#cc0000] text-white" : "bg-[#272727] text-[#aaa]"}`}>
-                {isCurrent && isLive ? "▶" : idx + 1}
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${isCurrent ? (isLooping ? "bg-blue-600" : "bg-[#cc0000]") : "bg-[#272727] text-[#aaa]"} ${isCurrent ? "text-white" : ""}`}>
+                {isCurrent && isLive ? (isLooping ? "↻" : "▶") : idx + 1}
               </span>
               <span className="flex-1 text-sm text-[#ccc] truncate">{video.title}</span>
-              {isCurrent && <span className="text-xs text-[#cc0000] flex-shrink-0">Playing</span>}
+              {isCurrent && (
+                <span className={`text-xs flex-shrink-0 ${isLooping ? "text-blue-400" : "text-[#cc0000]"}`}>
+                  {isLive ? (isLooping ? "↻ Looping" : "Playing") : "Paused"}
+                </span>
+              )}
+              {/* Play now button — visible on hover for non-current videos when live */}
+              {isLive && !isCurrent && (
+                <button
+                  onClick={() => onPlayVideo(idx)}
+                  disabled={!!controlLoading}
+                  title="Play this video now"
+                  className="opacity-0 group-hover:opacity-100 flex items-center gap-1 px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-all disabled:opacity-30 flex-shrink-0"
+                >
+                  {isPlayLoading ? "…" : "▶ Play now"}
+                </button>
+              )}
               <button
                 onClick={() => setEditingId(isEditing ? null : video.id)}
                 className={`text-xs transition-colors flex-shrink-0 ${isEditing ? "text-white" : "text-[#555] hover:text-[#aaa]"}`}
