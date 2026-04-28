@@ -282,7 +282,6 @@ function StudioLiveView({ livePlaylist, channels, profile, token, actionLoading,
   const [elapsed, setElapsed] = useState(0);
   const [controlLoading, setControlLoading] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const startTimeRef = useRef<number>(0);
 
   const isLive = livePlaylist.status === "live";
   const isPaused = livePlaylist.status === "paused";
@@ -295,22 +294,17 @@ function StudioLiveView({ livePlaylist, channels, profile, token, actionLoading,
   );
 
   useEffect(() => {
-    if (!livePlaylist.liveStartedAt) {
-      startTimeRef.current = 0;
-      setElapsed(0);
-      return;
-    }
-    startTimeRef.current = new Date(livePlaylist.liveStartedAt).getTime();
-    setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
-  }, [livePlaylist.liveStartedAt]);
-
-  useEffect(() => {
-    if (!isLive || startTimeRef.current === 0) return;
-    const t = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
-    }, 1000);
+    if (!isLive) { setElapsed(0); return; }
+    // Fall back to current video start time if liveStartedAt is absent (pre-migration streams)
+    const base = livePlaylist.liveStartedAt
+      ? new Date(livePlaylist.liveStartedAt).getTime()
+      : livePlaylist.currentVideoStartedAt
+        ? new Date(livePlaylist.currentVideoStartedAt).getTime()
+        : Date.now();
+    setElapsed(Math.floor((Date.now() - base) / 1000));
+    const t = setInterval(() => setElapsed(Math.floor((Date.now() - base) / 1000)), 1000);
     return () => clearInterval(t);
-  }, [isLive]);
+  }, [isLive, livePlaylist.liveStartedAt]);
 
   useEffect(() => {
     if (!videoRef.current || !currentItem?.videoUrl) return;
