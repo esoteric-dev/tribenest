@@ -36,8 +36,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col">
       <nav className="flex items-center justify-between px-6 py-4 border-b border-white/5">
-        <Link href="/" className="text-lg font-bold tracking-tight">
-          TribeNest
+        <Link href="/" className="text-lg font-bold tracking-tight text-[#FF5F1F] font-['Space_Grotesk'] uppercase tracking-widest">
+          Vara Labs
         </Link>
       </nav>
 

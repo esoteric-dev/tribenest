@@ -102,7 +102,7 @@ const Content = ({ children }: { children: React.ReactNode }) => {
     <>
       <PWAHead
         subdomain={params.subdomain}
-        appName={webPage.profile?.name ? `${webPage.profile.name} - TribeNest` : undefined}
+        appName={webPage.profile?.name ? `${webPage.profile.name} - Vara Labs` : undefined}
         description={webPage.page?.description || undefined}
         themeColor={theme.themeSettings.colors.primary}
         backgroundColor={theme.themeSettings.colors.background}

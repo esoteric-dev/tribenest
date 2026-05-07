@@ -19,12 +19,12 @@ export function PWAHead({ subdomain, appName, description, themeColor = "#000000
   }, []);
 
   // Default values
-  const defaultAppName = subdomain && subdomain !== "default-site" ? `${subdomain} - TribeNest` : "TribeNest";
+  const defaultAppName = subdomain && subdomain !== "default-site" ? `${subdomain} - Vara Labs` : "Vara Labs";
 
   const defaultDescription =
     subdomain && subdomain !== "default-site"
-      ? `${subdomain}'s digital space powered by TribeNest`
-      : "Your digital presence, simplified.";
+      ? `${subdomain}'s digital space powered by Vara Labs`
+      : "Stream everywhere. From one place.";
 
   const finalAppName = appName || defaultAppName;
   const finalDescription = description || defaultDescription;

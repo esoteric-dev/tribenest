@@ -8,8 +8,8 @@ export default async function CreatorPublicPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col">
       <nav className="flex items-center justify-between px-6 py-4 border-b border-white/5">
-        <Link href="/" className="text-lg font-bold tracking-tight">
-          TribeNest
+        <Link href="/" className="text-lg font-bold tracking-tight text-[#FF5F1F] font-['Space_Grotesk'] uppercase tracking-widest">
+          Vara Labs
         </Link>
         <Link
           href={`//${slug}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || "varalabs.systems"}`}
@@ -24,7 +24,7 @@ export default async function CreatorPublicPage({ params }: Props) {
           📺
         </div>
         <h1 className="text-3xl font-bold mb-2">{slug}</h1>
-        <p className="text-white/40 mb-8">Creator on TribeNest</p>
+        <p className="text-white/40 mb-8">Creator on Vara Labs</p>
 
         <div className="flex gap-4">
           <Link
