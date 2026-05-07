@@ -150,18 +150,19 @@
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono:wght@500&family=Syne:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 @layer utilities {
-  .hover-primary-glow:hover {
-      box-shadow: 0 10px 40px -10px rgba(124, 58, 237, 0.3);
+  .glass-panel {
+      background: rgba(5, 5, 5, 0.6);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      border-left: 1px solid rgba(255, 255, 255, 0.05);
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   }
-  .btn-gradient {
-      background: linear-gradient(135deg, #7c3aed, #03b5d3);
-  }
-  .text-gradient {
-      background: linear-gradient(135deg, #d2bbff, #4cd7f6);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+  .glow-hover:hover {
+      box-shadow: 0 0 8px rgba(255, 95, 31, 0.5);
+      border-color: #ff5f1f;
   }
 }

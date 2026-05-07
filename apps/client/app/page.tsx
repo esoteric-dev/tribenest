@@ -5,100 +5,105 @@ import LandingNav from "./_components/landing-nav";
 export default function Home() {
   return (
     <CreatorAuthProvider>
-      <div className="bg-background text-on-surface font-body-md antialiased overflow-x-hidden min-h-screen flex flex-col">
+      <div className="bg-[#050505] text-on-background min-h-screen flex flex-col font-body-base text-body-base selection:bg-primary-container selection:text-black">
         <LandingNav />
 
-        {/* Main Content */}
-        <main className="flex-grow pt-24">
+        {/* Main Canvas */}
+        <main className="flex-grow pt-32 pb-24 px-8 max-w-container-max mx-auto w-full flex flex-col gap-16">
           {/* Hero Section */}
-          <section className="relative py-xl px-gutter max-w-container-max mx-auto flex flex-col items-center text-center mt-xl">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary-container/20 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
-            
-            <div className="inline-flex items-center space-x-unit border border-outline-variant rounded-full px-sm py-unit bg-surface-container-low mb-lg">
-              <span className="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(76,215,246,0.6)] animate-pulse"></span>
-              <span className="font-label-mono text-label-mono text-on-surface-variant uppercase tracking-widest">Live Streaming Reimagined</span>
-            </div>
-            
-            <h1 className="font-display-hero text-display-hero text-white mb-lg max-w-4xl mx-auto leading-tight">
-              Your Stage. <br/> <span className="text-gradient">Every Platform.</span> <br/> One Upload.
-            </h1>
-            
-            <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto mb-xl">
-              Upload your pre-recorded content once and TribeNest automatically schedules and broadcasts it as a live stream across Twitch, YouTube, and Facebook.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row space-y-md sm:space-y-0 sm:space-x-md mb-xl">
-              <Link href="/signup" className="btn-gradient text-white font-button text-button px-xl py-md rounded-lg hover:scale-105 active:scale-95 transition-transform duration-200 text-lg flex items-center justify-center">
-                Start Streaming Free
-              </Link>
-              <button className="bg-surface-container-high border border-outline-variant text-white font-button text-button px-xl py-md rounded-lg hover:border-primary-container hover:bg-surface-container transition-colors duration-200 text-lg flex items-center justify-center">
-                <span className="material-symbols-outlined mr-sm">play_circle</span>
-                Watch how it works
-              </button>
-            </div>
-            
-            {/* Hero Visual */}
-            <div className="relative w-full max-w-5xl mt-lg rounded-xl border border-outline-variant bg-surface overflow-hidden hover-primary-glow transition-shadow duration-300 group">
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10 pointer-events-none"></div>
+          <section className="relative w-full rounded-DEFAULT glass-panel overflow-hidden border border-surface-variant group">
+            <div className="absolute inset-0 z-0 opacity-40 mix-blend-screen">
               <img 
-                alt="Dashboard Mockup" 
-                className="w-full h-auto object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500" 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXMps6gKF4g54M_xhR-Vy1RfxwfsA7EhgXO2vYrql6uRPvwvvhvjQcYRJZcEG6BJFar2SfHTu_2i6JOsrGx78WTIlP7vs3C0VwSze_ggEkMy_3u783I2rBHxTB9s9fzhbp4P-2Zj-bC0hqNMsMbDKYxnj1BulKAk4wHGJHe2QMLfrByXIjqQJkhLpy4FRy-fH3xbgyY0FUJwf-a6IpYzo6YFtgM82k4jLOWnK89awR3v3mbpQ3doxoquMpnsWctIcaD8t2608bkB-b"
+                alt="Data Stream" 
+                className="w-full h-full object-cover" 
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgSCHtA2_4H0zyyBkuMrLIwnNm8vdVS22MlnyhJKK8RGuz3cV98S4H5IxyvafE-mLWHT3_DYRLiE3zsLQP6zLnxzreN9f_-7xoPWGdrZZM0zejZDdNrkLtCTT0un6P_3b1c9I-L8uSHLb2JxJFn-9HV7wT-Rh6WgVU3XP4JPNYRM86BkbS-CVau8IZOdQeCYq4T1dLWCQB7Gq7fP9TBBA_oeXW5WIn92tA5PbzCmqNJLhy3l0Stw4m4Vqgaw3ls6FwrpJ43Eq-GwUP"
               />
+            </div>
+            <div className="relative z-10 p-12 md:p-24 flex flex-col items-center text-center gap-6 bg-gradient-to-t from-[#050505] to-transparent">
+              <div className="font-label-caps text-label-caps text-primary-container px-3 py-1 border border-primary-container/30 bg-primary-container/10 rounded-sm inline-block mb-4">
+                [SYSTEM_OK] CYBER-INDUSTRIAL PROTOCOL
+              </div>
+              <h1 className="font-headline-xl text-headline-xl text-on-background max-w-4xl uppercase">
+                Unlimited Reach.<br/><span className="text-primary-container">One Stream.</span>
+              </h1>
+              <p className="max-w-2xl text-on-surface-variant font-body-base text-body-base mt-4">
+                Deploy your broadcast across all major tactical networks simultaneously. Zero latency. Maximum impact. The ultimate transmission terminal for elite operators.
+              </p>
+              <div className="mt-8 flex gap-4">
+                <Link href="/signup" className="font-label-caps text-label-caps bg-primary-container text-black px-8 py-4 border border-primary-container hover:shadow-[0_0_15px_rgba(255,95,31,0.8)] transition-all uppercase">
+                  Initialize Uplink
+                </Link>
+                <button className="font-label-caps text-label-caps bg-transparent text-primary-container px-8 py-4 border border-primary-container hover:bg-primary-container/10 transition-all uppercase">
+                  View Architecture
+                </button>
+              </div>
             </div>
           </section>
 
-          {/* Final CTA */}
-          <section className="py-xl px-gutter max-w-4xl mx-auto text-center mt-xl mb-xl border-t border-outline-variant pt-xl">
-            <h2 className="font-h2 text-h2 text-white mb-md">Ready to go live everywhere?</h2>
-            <p className="font-body-md text-body-md text-on-surface-variant mb-lg">Join thousands of creators amplifying their reach without the extra effort.</p>
-            <Link href="/signup" className="inline-block btn-gradient text-white font-button text-button px-xl py-md rounded-lg hover:scale-105 active:scale-95 transition-transform duration-200 text-lg shadow-[0_0_30px_rgba(124,58,237,0.4)] hover:shadow-[0_0_50px_rgba(124,58,237,0.6)]">
-              Get Started Now
-            </Link>
+          {/* Tactical Features Bento Grid */}
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+            {/* Feature 1 */}
+            <div className="glass-panel p-8 rounded-DEFAULT flex flex-col gap-6 glow-hover transition-all duration-300 h-80 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-100 transition-opacity">
+                <span className="material-symbols-outlined text-primary-container" style={{fontVariationSettings: "'FILL' 1"}}>bolt</span>
+              </div>
+              <h3 className="font-headline-md text-headline-md text-on-background uppercase">Zero-Latency<br/>Core</h3>
+              <p className="font-body-base text-body-base text-on-surface-variant text-sm">Instantaneous data packet delivery bypassing standard civilian routing protocols.</p>
+              <div className="mt-auto pt-4 border-t border-surface-variant flex items-center justify-between">
+                <span className="font-data-mono text-data-mono text-zinc-500">PING: <span className="text-primary-container">0.02ms</span></span>
+                <div className="h-1 w-24 bg-surface-variant rounded-full overflow-hidden">
+                  <div className="h-full bg-primary-container w-full shadow-[0_0_8px_rgba(255,95,31,0.8)]"></div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Feature 2 */}
+            <div className="glass-panel p-8 rounded-DEFAULT flex flex-col gap-6 glow-hover transition-all duration-300 h-80 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-100 transition-opacity">
+                <span className="material-symbols-outlined text-primary-container" style={{fontVariationSettings: "'FILL' 1"}}>hub</span>
+              </div>
+              <h3 className="font-headline-md text-headline-md text-on-background uppercase">Multi-Platform<br/>Relay</h3>
+              <p className="font-body-base text-body-base text-on-surface-variant text-sm">Simultaneous vector injection into Twitch, YouTube, and Kick architectures from a single origin.</p>
+              <div className="mt-auto pt-4 border-t border-surface-variant flex gap-2">
+                <span className="font-label-caps text-label-caps text-zinc-400 border border-surface-variant px-2 py-1 rounded-sm">TWITCH</span>
+                <span className="font-label-caps text-label-caps text-zinc-400 border border-surface-variant px-2 py-1 rounded-sm">YT</span>
+                <span className="font-label-caps text-label-caps text-zinc-400 border border-surface-variant px-2 py-1 rounded-sm">KICK</span>
+              </div>
+            </div>
+            
+            {/* Feature 3 */}
+            <div className="glass-panel p-8 rounded-DEFAULT flex flex-col gap-6 glow-hover transition-all duration-300 h-80 relative overflow-hidden group md:col-span-1 md:row-span-1">
+              <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-100 transition-opacity">
+                <span className="material-symbols-outlined text-primary-container" style={{fontVariationSettings: "'FILL' 1"}}>query_stats</span>
+              </div>
+              <h3 className="font-headline-md text-headline-md text-on-background uppercase">Tactical<br/>Analytics</h3>
+              <p className="font-body-base text-body-base text-on-surface-variant text-sm">Live telemetry and cross-node viewer mapping displayed in an elite HUD environment.</p>
+              <div className="mt-auto grid grid-cols-2 gap-2 pt-4 border-t border-surface-variant">
+                <div className="flex flex-col">
+                  <span className="font-label-caps text-label-caps text-zinc-600">CONCURRENT</span>
+                  <span className="font-data-mono text-data-mono text-on-background text-lg">124,592</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-label-caps text-label-caps text-zinc-600">RETENTION</span>
+                  <span className="font-data-mono text-data-mono text-primary-container text-lg">94.2%</span>
+                </div>
+              </div>
+            </div>
           </section>
         </main>
 
         {/* Footer */}
-        <footer className="w-full py-16 px-8 bg-[#0A0A0F] border-t border-[#1E1E2E] font-['Syne']">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 max-w-7xl mx-auto">
-            <div className="col-span-1 md:col-span-1">
-              <div className="text-xl font-bold text-white mb-lg">
-                TribeNest
-              </div>
-              <p className="font-body-sm text-body-sm text-gray-500 mb-md">
-                The ultimate pre-recorded live streaming platform for modern creators.
-              </p>
-              <div className="flex space-x-md">
-                <span className="material-symbols-outlined text-gray-500 hover:text-violet-400 cursor-pointer transition-colors">videocam</span>
-                <span className="material-symbols-outlined text-gray-500 hover:text-violet-400 cursor-pointer transition-colors">podcasts</span>
-              </div>
+        <footer className="bg-[#050505] w-full border-t border-zinc-900 mt-auto border-white/5">
+          <div className="max-w-7xl mx-auto px-8 py-12 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="text-orange-500 font-bold font-['Space_Grotesk'] text-[10px] tracking-widest uppercase">
+              © {new Date().getFullYear()} VARA LABS. CYBER-INDUSTRIAL TRANSMISSION PROTOCOL ACTIVE.
             </div>
-            <div>
-              <h3 className="font-h3 text-h3 text-white mb-md text-sm uppercase tracking-wider">Product</h3>
-              <ul className="space-y-sm">
-                <li><Link className="font-body-sm text-body-sm text-gray-500 hover:text-violet-400 transition-colors" href="/#features">Features</Link></li>
-                <li><Link className="font-body-sm text-body-sm text-gray-500 hover:text-violet-400 transition-colors" href="/#pricing">Pricing</Link></li>
-                <li><Link className="font-body-sm text-body-sm text-gray-500 hover:text-violet-400 transition-colors" href="/integrations">Integrations</Link></li>
-              </ul>
+            <div className="flex gap-6 font-['Space_Grotesk'] text-[10px] tracking-widest uppercase text-zinc-600">
+              <Link className="hover:text-orange-400 transition-colors" href="#">Protocol</Link>
+              <Link className="hover:text-orange-400 transition-colors" href="#">Nodes</Link>
+              <Link className="hover:text-orange-400 transition-colors" href="#">Security</Link>
+              <Link className="hover:text-orange-400 transition-colors" href="#">Support</Link>
             </div>
-            <div>
-              <h3 className="font-h3 text-h3 text-white mb-md text-sm uppercase tracking-wider">Company</h3>
-              <ul className="space-y-sm">
-                <li><Link className="font-body-sm text-body-sm text-gray-500 hover:text-violet-400 transition-colors" href="/about">About Us</Link></li>
-                <li><Link className="font-body-sm text-body-sm text-gray-500 hover:text-violet-400 transition-colors" href="/careers">Careers</Link></li>
-                <li><Link className="font-body-sm text-body-sm text-gray-500 hover:text-violet-400 transition-colors" href="/contact">Contact</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-h3 text-h3 text-white mb-md text-sm uppercase tracking-wider">Legal</h3>
-              <ul className="space-y-sm">
-                <li><Link className="font-body-sm text-body-sm text-gray-500 hover:text-violet-400 transition-colors" href="/privacy">Privacy Policy</Link></li>
-                <li><Link className="font-body-sm text-body-sm text-gray-500 hover:text-violet-400 transition-colors" href="/terms">Terms of Service</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="max-w-7xl mx-auto mt-xl pt-lg border-t border-outline-variant flex justify-between items-center">
-            <p className="font-body-sm text-body-sm text-gray-500">© {new Date().getFullYear()} TribeNest. All rights reserved.</p>
           </div>
         </footer>
       </div>
