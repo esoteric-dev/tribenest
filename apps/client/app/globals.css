@@ -148,3 +148,20 @@
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
 }
+
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono:wght@500&family=Syne:wght@600;700;800&display=swap');
+
+@layer utilities {
+  .hover-primary-glow:hover {
+      box-shadow: 0 10px 40px -10px rgba(124, 58, 237, 0.3);
+  }
+  .btn-gradient {
+      background: linear-gradient(135deg, #7c3aed, #03b5d3);
+  }
+  .text-gradient {
+      background: linear-gradient(135deg, #d2bbff, #4cd7f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+  }
+}
