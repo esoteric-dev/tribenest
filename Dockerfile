@@ -1,8 +1,8 @@
 # Use Node.js 23 as base image
 FROM node:23-alpine AS base
 
-# Install nginx for reverse proxy
-RUN apk add --no-cache nginx
+# Install nginx and ffmpeg for reverse proxy and streaming
+RUN apk add --no-cache nginx ffmpeg
 
 
 # Install dependencies only when needed

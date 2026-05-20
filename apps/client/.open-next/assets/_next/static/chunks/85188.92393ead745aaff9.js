@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[85188],{85188:(e,a,u)=>{u.r(a),u.d(a,{__iconNode:()=>p,default:()=>s});var l=u(53998);let p=[["path",{d:"M4.037 4.688a.495.495 0 0 1 .651-.651l16 6.5a.5.5 0 0 1-.063.947l-6.124 1.58a2 2 0 0 0-1.438 1.435l-1.579 6.126a.5.5 0 0 1-.947.063z",key:"edeuup"}]],s=(0,l.A)("mouse-pointer-2",p)}}]);

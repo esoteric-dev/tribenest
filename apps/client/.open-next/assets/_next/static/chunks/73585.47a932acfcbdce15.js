@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[73585],{73585:(e,h,t)=>{t.r(h),t.d(h,{__iconNode:()=>i,default:()=>k});var d=t(53998);let i=[["path",{d:"M12 3v18",key:"108xh3"}],["path",{d:"M3 12h18",key:"1i2n21"}],["rect",{x:"3",y:"3",width:"18",height:"18",rx:"2",key:"h1oib"}]],k=(0,d.A)("grid-2x2",i)}}]);

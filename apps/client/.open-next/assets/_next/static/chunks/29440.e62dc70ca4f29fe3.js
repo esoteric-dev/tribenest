@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[29440],{29440:(e,t,h)=>{h.r(t),h.d(t,{__iconNode:()=>r,default:()=>a});var k=h(53998);let r=[["rect",{width:"20",height:"16",x:"2",y:"4",rx:"2",key:"18n3k1"}],["path",{d:"M12 9v11",key:"1fnkrn"}],["path",{d:"M2 9h13a2 2 0 0 1 2 2v9",key:"11z3ex"}]],a=(0,k.A)("proportions",r)}}]);

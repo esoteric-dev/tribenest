@@ -7,10 +7,10 @@
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
-MINIO_ACCESS_KEY="varalabs"
+MINIO_ACCESS_KEY="aristream"
 MINIO_SECRET_KEY="VaraMinio@12345678"
-CONTAINER_NAME="varalabs-minio"
-DATA_DIR="/opt/varalabs/minio-data"
+CONTAINER_NAME="aristream-minio"
+DATA_DIR="/opt/aristream/minio-data"
 BUCKET_NAME="tribenest"
 POLICY_FILE="$(cd "$(dirname "$0")/.." && pwd)/minio-anon-permission.json"
 

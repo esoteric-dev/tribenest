@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[13435],{13435:(e,k,a)=>{a.r(k),a.d(k,{__iconNode:()=>t,default:()=>n});var c=a(53998);let t=[["path",{d:"M12 2v10",key:"mnfbl"}],["path",{d:"m8.5 4 7 4",key:"m1xjk3"}],["path",{d:"m8.5 8 7-4",key:"t0m5j6"}],["circle",{cx:"12",cy:"17",r:"5",key:"qbz8iq"}]],n=(0,c.A)("non-binary",t)}}]);

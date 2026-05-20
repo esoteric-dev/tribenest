@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[35455],{35455:(e,c,l)=>{l.r(c),l.d(c,{__iconNode:()=>k,default:()=>p});var a=l(53998);let k=[["path",{d:"m20.9 18.55-8-15.98a1 1 0 0 0-1.8 0l-8 15.98",key:"53pte7"}],["ellipse",{cx:"12",cy:"19",rx:"9",ry:"3",key:"1ji25f"}]],p=(0,a.A)("cone",k)}}]);

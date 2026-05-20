@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[61769],{61769:(e,k,a)=>{a.r(k),a.d(k,{__iconNode:()=>s,default:()=>t});var h=a(53998);let s=[["path",{d:"m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z",key:"1fy3hk"}],["line",{x1:"15",x2:"9",y1:"10",y2:"10",key:"1gty7f"}]],t=(0,h.A)("bookmark-minus",s)}}]);

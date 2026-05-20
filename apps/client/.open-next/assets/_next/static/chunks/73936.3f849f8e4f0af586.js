@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[73936],{73936:(e,a,l)=>{l.r(a),l.d(a,{__iconNode:()=>h,default:()=>k});var s=l(53998);let h=[["line",{x1:"12",x2:"12",y1:"2",y2:"22",key:"7eqyqh"}],["path",{d:"M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6",key:"1b0p4s"}]],k=(0,s.A)("dollar-sign",h)}}]);

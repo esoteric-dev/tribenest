@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[49722],{49722:(e,c,k)=>{k.r(c),k.d(c,{__iconNode:()=>a,default:()=>l});var t=k(53998);let a=[["path",{d:"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2",key:"1yyitq"}],["circle",{cx:"9",cy:"7",r:"4",key:"nufk8"}],["polyline",{points:"16 11 18 13 22 9",key:"1pwet4"}]],l=(0,t.A)("user-check",a)}}]);

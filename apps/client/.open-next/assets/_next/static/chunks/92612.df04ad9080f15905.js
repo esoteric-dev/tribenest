@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[92612],{92612:(e,a,h)=>{h.r(a),h.d(a,{__iconNode:()=>d,default:()=>k});var t=h(53998);let d=[["path",{d:"M3 3v16a2 2 0 0 0 2 2h16",key:"c24i48"}],["path",{d:"M7 11h8",key:"1feolt"}],["path",{d:"M7 16h3",key:"ur6vzw"}],["path",{d:"M7 6h12",key:"sz5b0d"}]],k=(0,t.A)("chart-bar-decreasing",d)}}]);

@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[94553],{94553:(e,n,s)=>{s.r(n),s.d(n,{__iconNode:()=>c,default:()=>k});var t=s(53998);let c=[["path",{d:"M20 10c0-4.4-3.6-8-8-8s-8 3.6-8 8 3.6 8 8 8h8",key:"4znkd0"}],["polyline",{points:"16 14 20 18 16 22",key:"11njsm"}]],k=(0,t.A)("iteration-ccw",c)}}]);

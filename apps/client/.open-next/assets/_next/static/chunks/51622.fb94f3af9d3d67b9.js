@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[51622],{51622:(e,t,l)=>{l.r(t),l.d(t,{__iconNode:()=>_,default:()=>a});var u=l(53998);let _=[["path",{d:"m7 7 10 10-5 5V2l5 5L7 17",key:"1q5490"}]],a=(0,u.A)("bluetooth",_)}}]);

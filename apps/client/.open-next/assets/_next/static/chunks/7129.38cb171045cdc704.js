@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[7129],{7129:(e,n,a)=>{a.r(n),a.d(n,{__iconNode:()=>s,default:()=>t});var o=a(53998);let s=[["polygon",{points:"12 2 19 21 12 17 5 21 12 2",key:"x8c0qg"}]],t=(0,o.A)("navigation-2",s)}}]);

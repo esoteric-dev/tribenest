@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
   if (isMultiTenant && !subdomain) {
     return NextResponse.json(
       {
-        name: "Varalabs Creator Portal",
-        short_name: "Varalabs",
+        name: "AriStream Creator Portal",
+        short_name: "AriStream",
         start_url: "/",
         display: "standalone",
         background_color: "#0a0a0a",

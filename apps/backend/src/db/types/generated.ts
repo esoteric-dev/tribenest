@@ -30,10 +30,14 @@ export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 export interface Accounts {
   createdAt: Generated<Timestamp>;
   email: string;
+  firebaseUid: string | null;
   firstName: string;
   id: Generated<string>;
   lastName: string;
   password: string;
+  twitchAccessToken: string | null;
+  twitchId: string | null;
+  twitchRefreshToken: string | null;
   updatedAt: Generated<Timestamp>;
 }
 
@@ -531,6 +535,18 @@ export interface Saves {
   updatedAt: Generated<Timestamp>;
 }
 
+export interface ScheduledStreams {
+  createdAt: Generated<Timestamp>;
+  id: Generated<string>;
+  profileId: string;
+  scheduledAt: Timestamp;
+  status: Generated<string>;
+  title: string;
+  updatedAt: Generated<Timestamp>;
+  videoFilename: string;
+  videoUrl: string;
+}
+
 export interface Sessions {
   accountId: string;
   createdAt: Generated<Timestamp>;
@@ -589,18 +605,6 @@ export interface StreamBroadcastComments {
   updatedAt: Generated<Timestamp>;
 }
 
-export interface ScheduledStreams {
-  id: Generated<string>;
-  profileId: string;
-  title: string;
-  videoUrl: string;
-  videoFilename: string;
-  scheduledAt: Timestamp;
-  status: string;
-  createdAt: Generated<Timestamp>;
-  updatedAt: Generated<Timestamp>;
-}
-
 export interface StreamBroadcasts {
   createdAt: Generated<Timestamp>;
   egressId: string | null;
@@ -631,6 +635,34 @@ export interface StreamChannels {
   id: Generated<string>;
   profileId: string;
   title: string | null;
+  updatedAt: Generated<Timestamp>;
+}
+
+export interface StreamPlaylistItems {
+  createdAt: Generated<Timestamp>;
+  description: string | null;
+  id: Generated<string>;
+  playlistId: string;
+  position: Generated<number>;
+  title: string;
+  videoFilename: string;
+  videoUrl: string;
+}
+
+export interface StreamPlaylists {
+  createdAt: Generated<Timestamp>;
+  currentRepeat: Generated<number>;
+  currentVideoIndex: Generated<number>;
+  currentVideoStartedAt: Timestamp | null;
+  id: Generated<string>;
+  liveStartedAt: Timestamp | null;
+  loopCurrentVideo: Generated<boolean>;
+  profileId: string;
+  repeatCount: number | null;
+  scheduledEndAt: Timestamp | null;
+  scheduledStartAt: Timestamp | null;
+  status: Generated<string>;
+  title: string;
   updatedAt: Generated<Timestamp>;
 }
 
@@ -739,14 +771,16 @@ export interface DB {
   profilePaymentSubscriptions: ProfilePaymentSubscriptions;
   profiles: Profiles;
   saves: Saves;
+  scheduledStreams: ScheduledStreams;
   sessions: Sessions;
   smartLinkEvents: SmartLinkEvents;
   smartLinks: SmartLinks;
-  scheduledStreams: ScheduledStreams;
   streamBroadcastChannels: StreamBroadcastChannels;
   streamBroadcastComments: StreamBroadcastComments;
   streamBroadcasts: StreamBroadcasts;
   streamChannels: StreamChannels;
+  streamPlaylistItems: StreamPlaylistItems;
+  streamPlaylists: StreamPlaylists;
   streamTemplateChannels: StreamTemplateChannels;
   streamTemplates: StreamTemplates;
   websiteEvents: WebsiteEvents;

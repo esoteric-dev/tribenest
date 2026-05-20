@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[66768],{66768:(e,h,t)=>{t.r(h),t.d(h,{__iconNode:()=>d,default:()=>k});var a=t(53998);let d=[["rect",{width:"20",height:"16",x:"2",y:"4",rx:"2",key:"18n3k1"}],["path",{d:"M6 8h.01",key:"x9i8wu"}],["path",{d:"M10 8h.01",key:"1r9ogq"}],["path",{d:"M14 8h.01",key:"1primd"}]],k=(0,a.A)("app-window-mac",d)}}]);

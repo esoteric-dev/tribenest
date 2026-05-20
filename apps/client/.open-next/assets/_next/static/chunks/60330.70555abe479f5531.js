@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[60330],{60330:(e,a,l)=>{l.r(a),l.d(a,{__iconNode:()=>_,default:()=>c});var s=l(53998);let _=[["path",{d:"M11 16.586V19a1 1 0 0 1-1 1H2L18.37 3.63a1 1 0 1 1 3 3l-9.663 9.663a1 1 0 0 1-1.414 0L8 14",key:"1sllp5"}]],c=(0,s.A)("slice",_)}}]);

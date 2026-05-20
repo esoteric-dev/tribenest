@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[90447],{90447:(e,t,h)=>{h.r(t),h.d(t,{__iconNode:()=>r,default:()=>d});var a=h(53998);let r=[["path",{d:"M5 16v2",key:"g5qcv5"}],["path",{d:"M19 16v2",key:"1gbaio"}],["rect",{width:"20",height:"8",x:"2",y:"8",rx:"2",key:"vjsjur"}],["path",{d:"M18 12h.01",key:"yjnet6"}]],d=(0,a.A)("radio-receiver",r)}}]);

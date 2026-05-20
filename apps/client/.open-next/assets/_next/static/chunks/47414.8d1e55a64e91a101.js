@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[47414],{47414:(e,a,t)=>{t.r(a),t.d(a,{__iconNode:()=>k,default:()=>r});var h=t(53998);let k=[["rect",{width:"18",height:"18",x:"3",y:"3",rx:"2",key:"afitv7"}],["path",{d:"M9 17V7h4a3 3 0 0 1 0 6H9",key:"1dfk2c"}]],r=(0,h.A)("square-parking",k)}}]);

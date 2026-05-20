@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[67670],{67670:(e,h,t)=>{t.r(h),t.d(h,{__iconNode:()=>l,default:()=>c});var a=t(53998);let l=[["path",{d:"M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973",key:"1cez44"}],["path",{d:"m13 12-3 5h4l-3 5",key:"1t22er"}]],c=(0,a.A)("cloud-lightning",l)}}]);

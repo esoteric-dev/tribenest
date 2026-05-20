@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[14348],{14348:(e,a,t)=>{t.r(a),t.d(a,{__iconNode:()=>h,default:()=>k});var _=t(53998);let h=[["path",{d:"M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z",key:"17jzev"}]],k=(0,_.A)("thermometer",h)}}]);

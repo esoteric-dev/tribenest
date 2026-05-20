@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Docker cleanup script for the Varalabs VM
+# Docker cleanup script for the AriStream VM
 # Removes exited containers, dangling images, and unused layers to free disk + RAM.
 # Safe to run while the app is live — only touches stopped/unreferenced resources.
 
@@ -45,10 +45,10 @@ else
   ok "No dangling images"
 fi
 
-# ── 3. Old tribenest images (keep only the current :varalabs tag) ──────────────
+# ── 3. Old tribenest images (keep only the current :aristream tag) ──────────────
 
 log "Removing old tribenest image versions..."
-CURRENT=$(docker inspect --format='{{.Id}}' tribenest:varalabs 2>/dev/null || true)
+CURRENT=$(docker inspect --format='{{.Id}}' tribenest:aristream 2>/dev/null || true)
 OLD_IMAGES=$(docker images tribenest --format "{{.ID}}" | grep -v "^${CURRENT:7:12}" || true)
 if [ -n "$OLD_IMAGES" ]; then
   echo "$OLD_IMAGES" | xargs docker rmi -f 2>/dev/null || true

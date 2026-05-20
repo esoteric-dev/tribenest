@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[7843],{7843:(e,c,t)=>{t.r(c),t.d(c,{__iconNode:()=>k,default:()=>l});var a=t(53998);let k=[["path",{d:"M12 3v6",key:"1holv5"}],["circle",{cx:"12",cy:"12",r:"3",key:"1v7zrd"}],["path",{d:"M12 15v6",key:"a9ows0"}]],l=(0,a.A)("git-commit-vertical",k)}}]);

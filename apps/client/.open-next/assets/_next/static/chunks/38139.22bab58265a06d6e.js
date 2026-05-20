@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[38139],{38139:(e,h,r)=>{r.r(h),r.d(h,{__iconNode:()=>a,default:()=>k});var t=r(53998);let a=[["path",{d:"M3 2h18",key:"15qxfx"}],["rect",{width:"18",height:"12",x:"3",y:"6",rx:"2",key:"1439r6"}],["path",{d:"M3 22h18",key:"8prr45"}]],k=(0,t.A)("gallery-vertical",a)}}]);

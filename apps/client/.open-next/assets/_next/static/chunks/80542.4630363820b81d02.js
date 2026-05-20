@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[80542],{80542:(e,t,h)=>{h.r(t),h.d(t,{__iconNode:()=>c,default:()=>i});var r=h(53998);let c=[["rect",{width:"6",height:"20",x:"4",y:"2",rx:"2",key:"19qu7m"}],["rect",{width:"6",height:"20",x:"14",y:"2",rx:"2",key:"24v0nk"}]],i=(0,r.A)("stretch-vertical",c)}}]);

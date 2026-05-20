@@ -51,7 +51,7 @@ export default function CreatorDashboard({ params }: { params: Promise<{ slug: s
   if (!isAuthenticated) return null;
 
   const profile = authorizations.find((a) => a.profile.subdomain === slug)?.profile;
-  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "varalabs.systems";
+  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "aristream.com";
   const livePageUrl = `https://${slug}.${rootDomain}/live`;
 
   return (

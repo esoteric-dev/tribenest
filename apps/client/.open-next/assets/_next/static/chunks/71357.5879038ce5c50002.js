@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[71357],{71357:(e,c,l)=>{l.r(c),l.d(c,{__iconNode:()=>y,default:()=>a});var s=l(53998);let y=[["circle",{cx:"12",cy:"12",r:"10",key:"1mglay"}],["polygon",{points:"10 8 16 12 10 16 10 8",key:"1cimsy"}]],a=(0,s.A)("circle-play",y)}}]);

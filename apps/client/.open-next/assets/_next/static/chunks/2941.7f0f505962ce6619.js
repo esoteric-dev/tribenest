@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[2941],{2941:(e,a,h)=>{h.r(a),h.d(a,{__iconNode:()=>k,default:()=>d});var t=h(53998);let k=[["path",{d:"M8 6h10",key:"9lnwnk"}],["path",{d:"M6 12h9",key:"1g9pqf"}],["path",{d:"M11 18h7",key:"c8dzvl"}]],d=(0,t.A)("chart-no-axes-gantt",k)}}]);

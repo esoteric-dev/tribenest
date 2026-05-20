@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[47340],{47340:(e,a,k)=>{k.r(a),k.d(a,{__iconNode:()=>t,default:()=>d});var p=k(53998);let t=[["path",{d:"M5 15a6.5 6.5 0 0 1 7 0 6.5 6.5 0 0 0 7 0",key:"yrdkhy"}],["path",{d:"M5 9a6.5 6.5 0 0 1 7 0 6.5 6.5 0 0 0 7 0",key:"gzkvyz"}]],d=(0,p.A)("equal-approximately",t)}}]);

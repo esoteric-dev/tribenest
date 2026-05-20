@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[40125],{40125:(e,a,d)=>{d.r(a),d.d(a,{__iconNode:()=>p,default:()=>t});var k=d(53998);let p=[["path",{d:"m18 16 4-4-4-4",key:"1inbqp"}],["path",{d:"m6 8-4 4 4 4",key:"15zrgr"}],["path",{d:"m14.5 4-5 16",key:"e7oirm"}]],t=(0,k.A)("code-xml",p)}}]);

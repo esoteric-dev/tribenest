@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[9777],{9777:(e,c,l)=>{l.r(c),l.d(c,{__iconNode:()=>s,default:()=>u});var r=l(53998);let s=[["ellipse",{cx:"12",cy:"11",rx:"3",ry:"2",key:"1b2qxu"}],["ellipse",{cx:"12",cy:"12.5",rx:"10",ry:"8.5",key:"h8emeu"}]],u=(0,r.A)("torus",s)}}]);

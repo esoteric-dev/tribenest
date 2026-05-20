@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[65728],{65728:(e,t,h)=>{h.r(t),h.d(t,{__iconNode:()=>c,default:()=>k});var a=h(53998);let c=[["rect",{width:"18",height:"18",x:"3",y:"3",rx:"2",key:"afitv7"}],["path",{d:"M12 3v18",key:"108xh3"}]],k=(0,a.A)("columns-2",c)}}]);

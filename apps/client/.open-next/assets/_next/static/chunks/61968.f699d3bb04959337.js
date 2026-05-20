@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[61968],{61968:(e,c,t)=>{t.r(c),t.d(c,{__iconNode:()=>d,default:()=>h});var a=t(53998);let d=[["path",{d:"M21 17a9 9 0 0 0-15-6.7L3 13",key:"8mp6z9"}],["path",{d:"M3 7v6h6",key:"1v2h90"}],["circle",{cx:"12",cy:"17",r:"1",key:"1ixnty"}]],h=(0,a.A)("undo-dot",d)}}]);

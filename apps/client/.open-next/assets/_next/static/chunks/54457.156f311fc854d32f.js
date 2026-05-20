@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[54457],{54457:(e,h,t)=>{t.r(h),t.d(h,{__iconNode:()=>i,default:()=>s});var a=t(53998);let i=[["rect",{width:"18",height:"18",x:"3",y:"3",rx:"2",key:"afitv7"}],["path",{d:"M16 8.9V7H8l4 5-4 5h8v-1.9",key:"9nih0i"}]],s=(0,a.A)("square-sigma",i)}}]);

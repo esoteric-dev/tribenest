@@ -8,8 +8,8 @@
 set -euo pipefail
 
 REDIS_PASSWORD="VaraRedis@12345678"
-CONTAINER_NAME="varalabs-redis"
-DATA_DIR="/opt/varalabs/redis-data"
+CONTAINER_NAME="aristream-redis"
+DATA_DIR="/opt/aristream/redis-data"
 
 echo "==> Creating data directory at $DATA_DIR ..."
 sudo mkdir -p "$DATA_DIR"

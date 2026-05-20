@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[48482],{48482:(e,s,a)=>{a.r(s),a.d(s,{__iconNode:()=>_,default:()=>d});var c=a(53998);let _=[["path",{d:"M7.9 20A9 9 0 1 0 4 16.1L2 22Z",key:"vv11sd"}]],d=(0,c.A)("message-circle",_)}}]);

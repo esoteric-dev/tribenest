@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[25975],{25975:(e,a,k)=>{k.r(a),k.d(a,{__iconNode:()=>t,default:()=>h});var d=k(53998);let t=[["path",{d:"M6 5v11",key:"mdvv1e"}],["path",{d:"M12 5v6",key:"14ar3b"}],["path",{d:"M18 5v14",key:"7ji314"}]],h=(0,d.A)("kanban",t)}}]);

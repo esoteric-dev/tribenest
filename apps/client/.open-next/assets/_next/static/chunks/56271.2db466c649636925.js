@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[56271],{56271:(e,h,k)=>{k.r(h),k.d(h,{__iconNode:()=>a,default:()=>d});var t=k(53998);let a=[["path",{d:"M6 3h12l4 6-10 13L2 9Z",key:"1pcd5k"}],["path",{d:"M11 3 8 9l4 13 4-13-3-6",key:"1fcu3u"}],["path",{d:"M2 9h20",key:"16fsjt"}]],d=(0,t.A)("gem",a)}}]);

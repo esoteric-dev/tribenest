@@ -7,6 +7,13 @@ const createSessionSchema = z.object({
   }),
 });
 
-export type CreateSessionInput = z.infer<typeof createSessionSchema>["body"];
+const createOauthSessionSchema = z.object({
+  body: z.object({
+    idToken: z.string().min(1, "Firebase ID Token is required"),
+  }),
+});
 
-export { createSessionSchema };
+export type CreateSessionInput = z.infer<typeof createSessionSchema>["body"];
+export type CreateOauthSessionInput = z.infer<typeof createOauthSessionSchema>["body"];
+
+export { createSessionSchema, createOauthSessionSchema };

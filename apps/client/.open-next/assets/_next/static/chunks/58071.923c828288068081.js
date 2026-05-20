@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[58071],{58071:(e,a,d)=>{d.r(a),d.d(a,{__iconNode:()=>t,default:()=>h});var s=d(53998);let t=[["path",{d:"M7.9 20A9 9 0 1 0 4 16.1L2 22Z",key:"vv11sd"}],["path",{d:"M12 8v4",key:"1got3b"}],["path",{d:"M12 16h.01",key:"1drbdi"}]],h=(0,s.A)("message-circle-warning",t)}}]);

@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[88588],{88588:(e,a,t)=>{t.r(a),t.d(a,{__iconNode:()=>k,default:()=>p});var d=t(53998);let k=[["path",{d:"M21 7 6.82 21.18a2.83 2.83 0 0 1-3.99-.01a2.83 2.83 0 0 1 0-4L17 3",key:"1ub6xw"}],["path",{d:"m16 2 6 6",key:"1gw87d"}],["path",{d:"M12 16H4",key:"1cjfip"}]],p=(0,d.A)("test-tube-diagonal",k)}}]);

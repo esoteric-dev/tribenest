@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[95282],{95282:(e,c,a)=>{a.r(c),a.d(c,{__iconNode:()=>p,default:()=>r});var k=a(53998);let p=[["path",{d:"M15.6 2.7a10 10 0 1 0 5.7 5.7",key:"1e0p6d"}],["circle",{cx:"12",cy:"12",r:"2",key:"1c9p78"}],["path",{d:"M13.4 10.6 19 5",key:"1kr7tw"}]],r=(0,k.A)("circle-gauge",p)}}]);

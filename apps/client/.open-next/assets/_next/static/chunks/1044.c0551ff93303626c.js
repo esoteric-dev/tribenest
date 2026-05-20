@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[1044],{1044:(a,e,t)=>{t.r(e),t.d(e,{__iconNode:()=>k,default:()=>u});var h=t(53998);let k=[["path",{d:"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9",key:"4ay0iu"}],["path",{d:"M20 3v4",key:"1olli1"}],["path",{d:"M22 5h-4",key:"1gvqau"}]],u=(0,h.A)("moon-star",k)}}]);

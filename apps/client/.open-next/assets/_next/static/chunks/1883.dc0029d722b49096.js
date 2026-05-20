@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[1883],{1883:(a,e,h)=>{h.r(e),h.d(e,{__iconNode:()=>t,default:()=>k});var l=h(53998);let t=[["path",{d:"M17 14h.01",key:"7oqj8z"}],["path",{d:"M7 7h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14",key:"u1rqew"}]],k=(0,l.A)("wallet-minimal",t)}}]);

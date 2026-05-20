@@ -6,6 +6,8 @@ import { BadRequestError, NotFoundError, UnauthenticatedError } from "@src/utils
 import { signToken } from "@src/utils/jwt";
 import { UpdatePublicAccountInput, UpdatePublicAccountPasswordInput } from "@src/routes/public/accounts/schema";
 import { MULTI_TENANT } from "@src/configuration/secrets";
+import { firebaseAuth } from "@src/utils/firebase";
+import { v4 as uuidv4 } from "uuid";
 
 export class AccountService extends BaseService {
   public async findById(id: string) {
@@ -67,6 +69,66 @@ export class AccountService extends BaseService {
     if (!isPasswordValid) {
       throw new UnauthenticatedError("Invalid email or password");
     }
+
+    const session = await this.database.models.Session.insertOne({
+      accountId: account.id,
+      isValid: true,
+      userAgent: userAgent ? JSON.stringify(userAgent) : null,
+    });
+
+    const token = signToken({
+      accountId: account.id,
+      sessionId: session.id,
+    });
+
+    return {
+      account,
+      session,
+      token,
+    };
+  }
+
+  public async oauthLogin(input: { idToken: string }, userAgent?: Details) {
+    let decodedToken;
+    try {
+      decodedToken = await firebaseAuth.verifyIdToken(input.idToken);
+    } catch (error) {
+      throw new UnauthenticatedError("Invalid or expired OAuth token");
+    }
+
+    const { email, uid, name } = decodedToken;
+
+    if (!email) {
+      throw new BadRequestError("Email is required from OAuth provider");
+    }
+
+    let account = await this.database.models.Account.findOne({ email });
+
+    // Extract first and last name from name
+    const nameParts = (name || "Oauth User").split(" ");
+    const firstName = nameParts[0];
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
+
+    if (!account) {
+      // Account doesn't exist, create one with dummy password
+      const dummyPassword = await bcrypt.hash(uuidv4(), 10);
+      account = await this.database.models.Account.insertOne({
+        email,
+        password: dummyPassword,
+        firstName,
+        lastName,
+        firebaseUid: uid,
+      }) as any;
+    } else if (!account.firebaseUid) {
+      // Account exists but not linked, link it
+      await this.database.models.Account.updateOne(
+        { id: account.id },
+        { firebaseUid: uid }
+      );
+      account.firebaseUid = uid;
+    }
+
+    if (!account) throw new UnauthenticatedError("OAuth account creation failed");
 
     const session = await this.database.models.Session.insertOne({
       accountId: account.id,

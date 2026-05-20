@@ -80,6 +80,7 @@
     "express": "^5.1.0",
     "express-rate-limit": "^7.5.0",
     "express-useragent": "^1.0.15",
+    "firebase-admin": "^13.10.0",
     "helmet": "^8.1.0",
     "i18next": "^25.0.2",
     "intl-pluralrules": "^2.0.1",

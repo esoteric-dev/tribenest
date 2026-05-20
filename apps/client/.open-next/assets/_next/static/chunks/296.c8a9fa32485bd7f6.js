@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[296],{296:(e,h,t)=>{t.r(h),t.d(h,{__iconNode:()=>a,default:()=>d});var k=t(53998);let a=[["rect",{width:"20",height:"16",x:"2",y:"4",rx:"2",key:"18n3k1"}],["path",{d:"M2 14h20",key:"myj16y"}],["path",{d:"M12 20v-6",key:"1rm09r"}]],d=(0,k.A)("touchpad",a)}}]);

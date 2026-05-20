@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[51379],{51379:(e,c,a)=>{a.r(c),a.d(c,{__iconNode:()=>k,default:()=>t});var h=a(53998);let k=[["path",{d:"m6 16 6-12 6 12",key:"1b4byz"}],["path",{d:"M8 12h8",key:"1wcyev"}],["path",{d:"m16 20 2 2 4-4",key:"13tcca"}]],t=(0,h.A)("spell-check",k)}}]);

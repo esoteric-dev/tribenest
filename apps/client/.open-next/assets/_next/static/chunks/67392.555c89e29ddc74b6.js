@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[67392],{67392:(e,l,n)=>{n.r(l),n.d(l,{__iconNode:()=>p,default:()=>s});var i=n(53998);let p=[["line",{x1:"12",x2:"12",y1:"3",y2:"21",key:"1efggb"}],["polyline",{points:"8 8 4 12 8 16",key:"bnfmv4"}],["polyline",{points:"16 16 20 12 16 8",key:"u90052"}]],s=(0,i.A)("separator-vertical",p)}}]);

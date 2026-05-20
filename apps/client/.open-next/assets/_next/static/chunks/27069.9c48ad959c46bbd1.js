@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[27069],{27069:(e,a,p)=>{p.r(a),p.d(a,{__iconNode:()=>l,default:()=>t});var d=p(53998);let l=[["path",{d:"M12 13v8",key:"1l5pq0"}],["path",{d:"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242",key:"1pljnt"}],["path",{d:"m8 17 4-4 4 4",key:"1quai1"}]],t=(0,d.A)("cloud-upload",l)}}]);

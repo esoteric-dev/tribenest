@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[93253],{93253:(e,c,y)=>{y.r(c),y.d(c,{__iconNode:()=>l,default:()=>t});var i=y(53998);let l=[["circle",{cx:"12",cy:"12",r:"3",key:"1v7zrd"}],["line",{x1:"3",x2:"9",y1:"12",y2:"12",key:"1dyftd"}],["line",{x1:"15",x2:"21",y1:"12",y2:"12",key:"oup4p8"}]],t=(0,i.A)("git-commit-horizontal",l)}}]);

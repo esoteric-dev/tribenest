@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[43781],{43781:(e,a,c)=>{c.r(a),c.d(a,{__iconNode:()=>p,default:()=>s});var k=c(53998);let p=[["circle",{cx:"12",cy:"12",r:"4",key:"4exip2"}],["path",{d:"M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8",key:"7n84p3"}]],s=(0,k.A)("at-sign",p)}}]);

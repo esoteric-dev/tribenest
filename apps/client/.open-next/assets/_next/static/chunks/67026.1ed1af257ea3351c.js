@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[67026],{67026:(e,a,c)=>{c.r(a),c.d(a,{__iconNode:()=>t,default:()=>_});var s=c(53998);let t=[["path",{d:"M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z",key:"c7niix"}]],_=(0,s.A)("droplet",t)}}]);

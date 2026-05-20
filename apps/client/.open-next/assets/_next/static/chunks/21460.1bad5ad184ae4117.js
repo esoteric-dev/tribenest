@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[21460],{21460:(e,t,h)=>{h.r(t),h.d(t,{__iconNode:()=>a,default:()=>c});var i=h(53998);let a=[["path",{d:"M7 21h10",key:"1b0cd5"}],["rect",{width:"20",height:"14",x:"2",y:"3",rx:"2",key:"48i651"}]],c=(0,i.A)("tv-minimal",a)}}]);

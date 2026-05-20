@@ -7,6 +7,8 @@ const init: InitRouteFunction = ({ services, workers }) => {
   const router = Router();
   const controller = new SessionsController(services, workers);
   router.post("/", (...args) => controller.createSession(...args));
+  router.post("/oauth", (...args) => controller.createOauthSession(...args));
+  router.post("/twitch/callback", (...args) => controller.twitchCallback(...args));
   router.delete(
     "/",
     (req, _, next) => requireAuthentication(req, next, services),

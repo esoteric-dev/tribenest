@@ -1,0 +1,54 @@
+version: "3.8"
+
+# AriStream backend — runs alongside the existing ERP stack on the same erp-net.
+# The existing erp-cloudflared tunnel routes api.aristream.com → aristream-backend:5000
+# DO NOT touch erp-*, those are owned by the ERP system.
+
+services:
+  aristream-backend:
+    image: aristream-backend:latest
+    container_name: aristream-backend
+    restart: unless-stopped
+    networks:
+      - erp-net
+    volumes:
+      - /home/streamer/firebase-adminsdk.json:/app/multi-authenticator-f56f2-firebase-adminsdk-fbsvc-eed4f84773.json:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+
+      # ── PostgreSQL (uses the same postgres container, separate DB) ────────
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_USER=aristream_user
+      - DATABASE_PASSWORD=AriStream@2024
+      - DATABASE_NAME=aristream
+
+      # ── Redis (use erp-redis if present, else host) ───────────────────────
+      - REDIS_URL=redis://host.docker.internal:6379
+
+      # ── JWT ──────────────────────────────────────────────────────────────
+      - JWT_SECRET=aristream-super-secret-jwt-key-contabo-2024
+      - ACCESSTOKENTTL=1h
+
+      # ── Domains ──────────────────────────────────────────────────────────
+      - ROOT_DOMAIN=aristream.com
+      - API_URL=https://api.aristream.com
+      - ADMIN_URL=https://admin.aristream.com
+
+      # ── MinIO (shared minio on erp-net) ──────────────────────────────────
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin123
+      - MINIO_BUCKET=aristream
+      - MINIO_URL=http://minio:9000
+      - MINIO_REGION=us-east-1
+      - MINIO_BUCKET_URL=https://assets.aristream.com/aristream
+
+      # ── Firebase Admin SDK ────────────────────────────────────────────────
+      - FIREBASE_PROJECT_ID=multi-authenticator-f56f2
+
+networks:
+  erp-net:
+    external: true

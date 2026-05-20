@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[33581],{33581:(e,t,h)=>{h.r(t),h.d(t,{__iconNode:()=>i,default:()=>a});var r=h(53998);let i=[["rect",{width:"9",height:"6",x:"6",y:"14",rx:"2",key:"lpm2y7"}],["rect",{width:"16",height:"6",x:"6",y:"4",rx:"2",key:"rdj6ps"}],["path",{d:"M2 2v20",key:"1ivd8o"}]],a=(0,r.A)("align-start-vertical",i)}}]);

@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[90067],{90067:(e,h,t)=>{t.r(h),t.d(h,{__iconNode:()=>a,default:()=>u});var r=t(53998);let a=[["rect",{width:"18",height:"14",x:"3",y:"5",rx:"2",ry:"2",key:"12ruh7"}],["path",{d:"M7 15h4M15 15h2M7 11h2M13 11h4",key:"1ueiar"}]],u=(0,r.A)("captions",a)}}]);

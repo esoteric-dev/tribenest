@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[48974],{48974:(e,l,s)=>{s.r(l),s.d(l,{__iconNode:()=>c,default:()=>r});var a=s(53998);let c=[["ellipse",{cx:"12",cy:"5",rx:"9",ry:"3",key:"msslwz"}],["path",{d:"M3 5v14a9 3 0 0 0 18 0V5",key:"aqi0yr"}]],r=(0,a.A)("cylinder",c)}}]);

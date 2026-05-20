@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[68411],{68411:(e,h,t)=>{t.r(h),t.d(h,{__iconNode:()=>a,default:()=>c});var k=t(53998);let a=[["path",{d:"m9 10 2 2 4-4",key:"1gnqz4"}],["rect",{width:"20",height:"14",x:"2",y:"3",rx:"2",key:"48i651"}],["path",{d:"M12 17v4",key:"1riwvh"}],["path",{d:"M8 21h8",key:"1ev6f3"}]],c=(0,k.A)("monitor-check",a)}}]);

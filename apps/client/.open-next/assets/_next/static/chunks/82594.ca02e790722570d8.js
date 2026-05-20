@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[82594],{82594:(e,t,a)=>{a.r(t),a.d(t,{__iconNode:()=>d,default:()=>h});var k=a(53998);let d=[["path",{d:"M17 6H3",key:"16j9eg"}],["path",{d:"M21 12H8",key:"scolzb"}],["path",{d:"M21 18H8",key:"1wfozv"}],["path",{d:"M3 12v6",key:"fv4c87"}]],h=(0,k.A)("text-quote",d)}}]);

@@ -7,7 +7,7 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-COMPOSE_FILE="$REPO_DIR/docker-compose.varalabs.yml"
+COMPOSE_FILE="$REPO_DIR/docker-compose.aristream.yml"
 
 # JWT_SECRET must be set in the environment or passed in.
 # Generate one with: openssl rand -hex 64

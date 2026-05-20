@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[77901],{77901:(e,h,a)=>{a.r(h),a.d(h,{__iconNode:()=>t,default:()=>d});var k=a(53998);let t=[["path",{d:"M11 18H3",key:"n3j2dh"}],["path",{d:"m15 18 2 2 4-4",key:"1szwhi"}],["path",{d:"M16 12H3",key:"1a2rj7"}],["path",{d:"M16 6H3",key:"1wxfjs"}]],d=(0,k.A)("list-check",t)}}]);

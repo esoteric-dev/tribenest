@@ -2,6 +2,7 @@
 
 import axios from "axios";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { firebase } from "../firebase";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const TOKEN_KEY = "creator_portal_token";
@@ -41,6 +42,9 @@ type CreatorAuthContextType = {
     lastName: string;
   }) => Promise<{ account: CreatorAccount; token: string }>;
   createProfile: (data: { subdomain: string; name: string }) => Promise<CreatorProfile>;
+  oauthLogin: (idToken: string) => Promise<CreatorAuthorization[]>;
+  signInWithGoogle: () => Promise<CreatorAuthorization[]>;
+  resendVerification: () => Promise<void>;
 };
 
 const CreatorAuthContext = createContext<CreatorAuthContextType>({} as CreatorAuthContextType);
@@ -86,6 +90,26 @@ export function CreatorAuthProvider({ children }: { children: React.ReactNode })
     localStorage.setItem(TOKEN_KEY, newToken);
     setToken(newToken);
     return fetchSession(newToken);
+  };
+
+  const oauthLogin = async (idToken: string): Promise<CreatorAuthorization[]> => {
+    const res = await axios.post(`${API_URL}/sessions/oauth`, { idToken });
+    const newToken: string = res.data.token;
+    localStorage.setItem(TOKEN_KEY, newToken);
+    setToken(newToken);
+    return fetchSession(newToken);
+  };
+
+  const signInWithGoogle = async (): Promise<CreatorAuthorization[]> => {
+    const result = await firebase.signInWithPopup(firebase.auth, firebase.googleProvider);
+    const idToken = await result.user.getIdToken();
+    return oauthLogin(idToken);
+  };
+
+  const resendVerification = async (): Promise<void> => {
+    if (firebase.auth.currentUser) {
+      await firebase.sendEmailVerification(firebase.auth.currentUser);
+    }
   };
 
   const signup = async (data: {
@@ -135,6 +159,9 @@ export function CreatorAuthProvider({ children }: { children: React.ReactNode })
         logout,
         signup,
         createProfile,
+        oauthLogin,
+        signInWithGoogle,
+        resendVerification,
       }}
     >
       {children}

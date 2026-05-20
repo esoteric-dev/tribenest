@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[6041],{6041:(e,c,k)=>{k.r(c),k.d(c,{__iconNode:()=>l,default:()=>t});var r=k(53998);let l=[["circle",{cx:"18",cy:"18",r:"3",key:"1xkwt0"}],["circle",{cx:"6",cy:"6",r:"3",key:"1lh9wr"}],["path",{d:"M6 21V9a9 9 0 0 0 9 9",key:"7kw0sc"}]],t=(0,r.A)("git-merge",l)}}]);

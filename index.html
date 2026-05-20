@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>AriStream - Sign Up</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Google Fonts: Geist & Material Symbols -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Tailwind Theme Configuration -->
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed-variant": "#0040a1",
+                        "on-secondary-container": "#a6b9de",
+                        "on-error": "#690005",
+                        "tertiary": "#ffb59a",
+                        "platform-youtube": "#FF0000",
+                        "surface-dim": "#10131c",
+                        "surface-container": "#1d1f28",
+                        "secondary-fixed-dim": "#b4c7ec",
+                        "platform-twitch": "#9146FF",
+                        "on-tertiary-fixed": "#380d00",
+                        "on-secondary-fixed": "#061b38",
+                        "inverse-primary": "#0056d1",
+                        "error": "#ffb4ab",
+                        "status-ready": "#34C759",
+                        "neutral-muted": "#8D8D8D",
+                        "inverse-on-surface": "#2d3039",
+                        "on-primary-fixed": "#001847",
+                        "primary-container": "#006aff",
+                        "on-surface": "#e1e2ee",
+                        "surface": "#10131c",
+                        "on-tertiary": "#5b1b00",
+                        "secondary-fixed": "#d6e3ff",
+                        "background": "#10131c",
+                        "on-surface-variant": "#c2c6d8",
+                        "tertiary-fixed": "#ffdbcf",
+                        "on-secondary": "#1e314f",
+                        "status-live": "#FF3B30",
+                        "surface-container-low": "#191b24",
+                        "surface-container-lowest": "#0b0e16",
+                        "primary-fixed-dim": "#b2c5ff",
+                        "surface-container-highest": "#32343e",
+                        "surface-bright": "#363942",
+                        "on-tertiary-fixed-variant": "#802900",
+                        "on-primary": "#002c72",
+                        "surface-variant": "#32343e",
+                        "outline-variant": "#424655",
+                        "error-container": "#93000a",
+                        "secondary": "#b4c7ec",
+                        "outline": "#8c90a1",
+                        "on-primary-container": "#fefbff",
+                        "tertiary-fixed-dim": "#ffb59a",
+                        "inverse-surface": "#e1e2ee",
+                        "primary-fixed": "#dae2ff",
+                        "on-tertiary-container": "#fffbff",
+                        "surface-tint": "#b2c5ff",
+                        "on-error-container": "#ffdad6",
+                        "primary": "#b2c5ff",
+                        "on-secondary-fixed-variant": "#354766",
+                        "tertiary-container": "#cd4700",
+                        "on-background": "#e1e2ee",
+                        "secondary-container": "#374969",
+                        "surface-container-high": "#272a33"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-max": "1440px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "40px",
+                        "gutter": "24px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Geist"],
+                        "body-sm": ["Geist"],
+                        "headline-lg-mobile": ["Geist"],
+                        "body-md": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "headline-xl": ["Geist"],
+                        "label-md": ["Geist"],
+                        "body-lg": ["Geist"],
+                        "label-sm": ["Geist"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "14px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* Custom glow animation for the portal effect */
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                opacity: 0.4;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.6;
+                transform: scale(1.05);
+            }
+        }
+
+        .portal-glow {
+            animation: pulse-glow 8s infinite ease-in-out;
+        }
+    </style>
+</head>
+
+<body class="bg-surface text-on-surface antialiased min-h-screen flex flex-col font-body-md overflow-x-hidden">
+    <!-- TopNavBar (Shared Component) -->
+    <!-- Suppressing navigation links visually as per UI best practices for transactional pages, 
+         but keeping the structure intact as required by the shared component definition. -->
+    <header class="fixed top-0 z-50 w-full bg-surface/95 backdrop-blur-md border-b border-white/10 flat no shadows">
+        <div class="flex justify-between items-center w-full px-margin-desktop h-20 max-w-container-max mx-auto">
+            <!-- Brand Logo -->
+            <a class="text-headline-md font-headline-md font-bold text-primary tracking-tight" href="#">
+                AriStream
+            </a>
+            <!-- Navigation Links (Inactive for Sign Up context) -->
+            <nav class="hidden md:flex items-center gap-8">
+                <a class="text-on-surface-variant hover:text-on-surface transition-colors text-label-md font-label-md"
+                    href="#">Products</a>
+                <a class="text-on-surface-variant hover:text-on-surface transition-colors text-label-md font-label-md"
+                    href="#">Solutions</a>
+                <a class="text-on-surface-variant hover:text-on-surface transition-colors text-label-md font-label-md"
+                    href="#">Pricing</a>
+                <a class="text-on-surface-variant hover:text-on-surface transition-colors text-label-md font-label-md"
+                    href="#">About</a>
+            </nav>
+            <!-- Actions -->
+            <div class="hidden md:flex items-center gap-4">
+                <a class="text-on-surface-variant hover:text-on-surface transition-colors text-label-md font-label-md"
+                    href="#">Login</a>
+                <a class="bg-primary text-on-primary text-label-md font-label-md px-4 py-2 rounded active:scale-95 transition-transform hover:bg-surface-container-high/50"
+                    href="#">
+                    Start Streaming
+                </a>
+            </div>
+        </div>
+    </header>
+    <!-- Main Content: Split Screen Layout -->
+    <main class="flex-grow flex mt-20 relative">
+        <!-- Left Side: Visual/Cinematic Element -->
+        <div
+            class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-surface-container-lowest items-center justify-center border-r border-white/10">
+            <!-- Background Image with highly detailed prompt -->
+            <div class="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-luminosity"
+                data-alt="A highly cinematic and abstract 3D digital environment representing a high-speed data waterfall or portal. The scene is rendered in deep, dark navy and black tones, typical of a professional dark mode interface. Vibrant, glowing electric blue and subtle purple neon lights cascade vertically, creating a sense of rapid movement and technological power. The lighting is dramatic and moody, reflecting a high-energy broadcast command center aesthetic, sleek, modern, and immersive."
+                style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD6_C5HFy5JAUsQl-fYJ8HZAa5hFVjMwHZql7j0xzpBK3jsxZKeHbRRQnckrygMA-KT4cM8Clgzh9u6ZHkwHJqe3FipY6JLL18O85TY8iG-fqsOXURXb7qOz6nyaxDatgBqJDyo-Jn-KLzl-xxdWPLSR5JlSJLm8rlHQ-QwlbuzCQgUkTJ3KTUVTSxfF3x1JCw7DtaQXN5L9Zl5_u6QU2yXNtQUvUEEUxttEFrM3ebWtlbwnXdkHTzLeV6rYiutrUVs1ANcstyW__M');">
+            </div>
+            <!-- Abstract Portal Glow Effects -->
+            <div
+                class="absolute w-[600px] h-[600px] bg-primary/20 rounded-full blur-[100px] portal-glow mix-blend-screen">
+            </div>
+            <div
+                class="absolute top-1/4 right-1/4 w-[300px] h-[300px] bg-platform-twitch/10 rounded-full blur-[80px] mix-blend-screen">
+            </div>
+            <!-- Overlay Content -->
+            <div class="relative z-10 p-margin-desktop max-w-lg">
+                <div
+                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container/50 border border-white/10 backdrop-blur-sm mb-6">
+                    <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                    <span class="text-label-sm font-label-sm text-primary">System Status: Optimal</span>
+                </div>
+                <h1 class="text-headline-xl font-headline-xl text-on-surface mb-6 leading-tight">
+                    Command your broadcast.
+                </h1>
+                <p class="text-body-lg font-body-lg text-on-surface-variant mb-12">
+                    Join elite creators managing high-stakes, multi-platform streams from a single, low-friction
+                    dashboard.
+                </p>
+                <!-- Trust Indicators -->
+                <div class="flex gap-4 opacity-60">
+                    <div
+                        class="w-12 h-12 rounded bg-surface-container border border-white/5 flex items-center justify-center">
+                        <span class="material-symbols-outlined" data-icon="videocam">videocam</span>
+                    </div>
+                    <div
+                        class="w-12 h-12 rounded bg-surface-container border border-white/5 flex items-center justify-center">
+                        <span class="material-symbols-outlined" data-icon="router">router</span>
+                    </div>
+                    <div
+                        class="w-12 h-12 rounded bg-surface-container border border-white/5 flex items-center justify-center">
+                        <span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Right Side: Form Container -->
+        <div
+            class="w-full lg:w-1/2 flex items-center justify-center p-margin-mobile md:p-margin-desktop bg-surface relative">
+            <!-- Subtle background glow for mobile -->
+            <div
+                class="lg:hidden absolute top-0 right-0 w-full h-1/2 bg-primary/5 rounded-full blur-[80px] pointer-events-none">
+            </div>
+            <div class="w-full max-w-md relative z-10">
+                <div class="mb-10">
+                    <h2 class="text-headline-lg font-headline-lg text-on-surface mb-2">Join the Future of Broadcasting
+                    </h2>
+                    <p class="text-body-md font-body-md text-on-surface-variant">Start reaching 30+ platforms
+                        simultaneously in minutes.</p>
+                </div>
+                <!-- Social Auth -->
+                <div class="flex flex-col gap-3 mb-8">
+                    <button
+                        class="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg bg-transparent border border-outline-variant hover:border-primary/50 hover:bg-surface-container-high transition-all duration-200 text-label-md font-label-md text-on-surface group">
+                        <span
+                            class="material-symbols-outlined text-on-surface-variant group-hover:text-on-surface transition-colors"
+                            data-icon="login">login</span>
+                        Continue with Google
+                    </button>
+                    <button
+                        class="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg bg-transparent border border-outline-variant hover:border-platform-twitch/50 hover:bg-surface-container-high transition-all duration-200 text-label-md font-label-md text-on-surface group">
+                        <span class="material-symbols-outlined text-platform-twitch" data-icon="hub">hub</span>
+                        Continue with Twitch
+                    </button>
+                </div>
+                <!-- Divider -->
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="h-px bg-outline-variant flex-grow opacity-50"></div>
+                    <span class="text-label-sm font-label-sm text-neutral-muted uppercase tracking-wider">or sign up
+                        with email</span>
+                    <div class="h-px bg-outline-variant flex-grow opacity-50"></div>
+                </div>
+                <!-- Form -->
+                <form class="flex flex-col gap-5">
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-label-sm font-label-sm text-on-surface-variant" for="fullName">Full
+                            Name</label>
+                        <input
+                            class="w-full bg-surface-container-high border border-outline-variant rounded-lg p-3 text-body-md font-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-neutral-muted/50"
+                            id="fullName" placeholder="Jane Doe" type="text" />
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-label-sm font-label-sm text-on-surface-variant" for="email">Email</label>
+                        <input
+                            class="w-full bg-surface-container-high border border-outline-variant rounded-lg p-3 text-body-md font-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-neutral-muted/50"
+                            id="email" placeholder="jane@example.com" type="email" />
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-label-sm font-label-sm text-on-surface-variant"
+                            for="password">Password</label>
+                        <input
+                            class="w-full bg-surface-container-high border border-outline-variant rounded-lg p-3 text-body-md font-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-neutral-muted/50"
+                            id="password" placeholder="••••••••" type="password" />
+                    </div>
+                    <button
+                        class="mt-4 w-full bg-primary text-on-primary text-label-md font-label-md py-3.5 px-6 rounded-lg flex items-center justify-center gap-2 hover:brightness-110 shadow-[0_0_20px_rgba(178,197,255,0.2)] transition-all duration-300 active:scale-[0.98]"
+                        type="button">
+                        Create My Account
+                        <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+                    </button>
+                </form>
+                <p class="mt-8 text-center text-body-sm font-body-sm text-on-surface-variant">
+                    Already have an account?
+                    <a class="text-primary hover:text-primary-fixed transition-colors font-medium ml-1" href="#">Log
+                        In</a>
+                </p>
+            </div>
+        </div>
+    </main>
+    <!-- Footer (Shared Component) -->
+    <footer class="w-full border-t border-white/5 bg-surface-container-lowest mt-auto">
+        <div
+            class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-gutter px-margin-desktop py-12 max-w-container-max mx-auto">
+            <!-- Brand Column -->
+            <div class="col-span-2 lg:col-span-2 flex flex-col gap-4">
+                <span class="text-headline-sm font-headline-sm font-bold text-on-surface">
+                    AriStream
+                </span>
+                <p class="text-body-sm font-body-sm text-on-surface-variant opacity-80">
+                    © 2024 AriStream Broadcast Systems. All rights reserved.
+                </p>
+            </div>
+            <!-- Links Columns -->
+            <div class="flex flex-col gap-3">
+                <a class="text-on-surface-variant hover:text-primary transition-colors text-label-sm font-label-sm opacity-80 hover:opacity-100"
+                    href="#">Company</a>
+                <a class="text-on-surface-variant hover:text-primary transition-colors text-label-sm font-label-sm opacity-80 hover:opacity-100"
+                    href="#">Resources</a>
+            </div>
+            <div class="flex flex-col gap-3">
+                <a class="text-on-surface-variant hover:text-primary transition-colors text-label-sm font-label-sm opacity-80 hover:opacity-100"
+                    href="#">Support</a>
+                <a class="text-on-surface-variant hover:text-primary transition-colors text-label-sm font-label-sm opacity-80 hover:opacity-100"
+                    href="#">Legal</a>
+            </div>
+            <div class="flex flex-col gap-3">
+                <a class="text-on-surface-variant hover:text-primary transition-colors text-label-sm font-label-sm opacity-80 hover:opacity-100"
+                    href="#">Careers</a>
+                <a class="text-on-surface-variant hover:text-primary transition-colors text-label-sm font-label-sm opacity-80 hover:opacity-100"
+                    href="#">Contact</a>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>

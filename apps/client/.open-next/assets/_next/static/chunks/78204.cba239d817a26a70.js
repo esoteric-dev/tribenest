@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[78204],{78204:(e,y,l)=>{l.r(y),l.d(y,{__iconNode:()=>k,default:()=>x});var n=l(53998);let k=[["line",{x1:"5",x2:"19",y1:"9",y2:"9",key:"1nwqeh"}],["line",{x1:"5",x2:"19",y1:"15",y2:"15",key:"g8yjpy"}],["line",{x1:"19",x2:"5",y1:"5",y2:"19",key:"1x9vlm"}]],x=(0,n.A)("equal-not",k)}}]);

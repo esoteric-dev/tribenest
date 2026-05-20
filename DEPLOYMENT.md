@@ -1,13 +1,13 @@
-# Deployment Guide — varalabs.systems
+# Deployment Guide — aristream.com
 
 ## Architecture
 
 ```
-varalabs.systems          → Cloudflare Pages  (Next.js frontend — wrangler deploy)
-api.varalabs.systems      → Cloudflare Tunnel → Azure VM port 80 → nginx → backend :8000
-admin.varalabs.systems    → Cloudflare Tunnel → Azure VM port 80 → nginx → backend :8000
-assets.varalabs.systems   → Cloudflare Tunnel → Azure VM port 9002 → tribenest-minio
-media.varalabs.systems    → Cloudflare Tunnel → Azure VM port 7880 → LiveKit (future)
+aristream.com          → Cloudflare Pages  (Next.js frontend — wrangler deploy)
+api.aristream.com      → Cloudflare Tunnel → Azure VM port 80 → nginx → backend :8000
+admin.aristream.com    → Cloudflare Tunnel → Azure VM port 80 → nginx → backend :8000
+assets.aristream.com   → Cloudflare Tunnel → Azure VM port 9002 → tribenest-minio
+media.aristream.com    → Cloudflare Tunnel → Azure VM port 7880 → LiveKit (future)
 ```
 
 ---
@@ -16,10 +16,10 @@ media.varalabs.systems    → Cloudflare Tunnel → Azure VM port 7880 → LiveK
 
 | Property | Value |
 |---|---|
-| Host | `20.196.73.173` |
-| User | `azureuser` |
-| OS | Debian 12 (bookworm) |
-| SSH | `ssh azureuser@20.196.73.173` |
+| Host | `157.173.124.222` |
+| User | `stream` |
+| OS | Ubuntu / Debian |
+| SSH | `ssh stream@157.173.124.222` |
 
 ---
 
@@ -27,7 +27,7 @@ media.varalabs.systems    → Cloudflare Tunnel → Azure VM port 7880 → LiveK
 
 | Container | Image | Ports | Purpose |
 |---|---|---|---|
-| `tribenest-app` | `tribenest:varalabs` (local) | `80:80` | Backend API + admin SPA + Next.js (nginx inside) |
+| `tribenest-app` | `tribenest:aristream` (local) | `80:80` | Backend API + admin SPA + Next.js (nginx inside) |
 | `tribenest-minio` | `minio/minio:latest` | `9002:9000`, `9003:9001` | Object storage for tribenest |
 | `openstream_redis_1` | `redis:7-alpine` | `6379:6379` | Redis (shared, no password) |
 
@@ -40,14 +40,14 @@ media.varalabs.systems    → Cloudflare Tunnel → Azure VM port 7880 → LiveK
 | VM SSH | `azureuser` / `Test@12345678` |
 | Database | `dbuser` / `Test@12345678` @ `openstream-db.postgres.database.azure.com:5432/postgres` |
 | Redis | No password — `redis://localhost:6379` |
-| MinIO | `varalabs` / `VaraMinio@12345678` — API on port 9002, console on port 9003 |
+| MinIO | `aristream` / `AriStreamMinio@12345678` — API on port 9002, console on port 9003 |
 | MinIO bucket | `tribenest` (public-read policy applied) |
-| JWT Secret | `varalabs-super-secret-jwt-key-change-in-real-prod-2024` |
-| Cloudflare Tunnel | `varalabs-tunnel` (ID: `836973e3-99c5-4699-ad03-90cda6cd5f86`) |
+| JWT Secret | `aristream-super-secret-jwt-key-change-in-real-prod-2024` |
+| Cloudflare Tunnel | `aristream-tunnel` (ID: `836973e3-99c5-4699-ad03-90cda6cd5f86`) |
 
 ---
 
-## The `tribenest:varalabs` Docker Image
+## The `tribenest:aristream` Docker Image
 
 This is a patched local image built on the VM. It is NOT pushed to any registry.
 Source: `ghcr.io/drenathan/tribenest:latest` + 5 patches applied in `/opt/tribenest-patch/`.
@@ -67,9 +67,9 @@ To rebuild after upstream updates:
 ssh azureuser@20.196.73.173
 cd /opt/tribenest-patch
 docker pull ghcr.io/drenathan/tribenest:latest
-docker build -t tribenest:varalabs .
+docker build -t tribenest:aristream .
 docker stop tribenest-app && docker rm tribenest-app
-cd /opt/tribenest && docker-compose -f docker-compose.varalabs.yml up -d
+cd /opt/tribenest && docker-compose -f docker-compose.aristream.yml up -d
 ```
 
 ---
@@ -77,24 +77,24 @@ cd /opt/tribenest && docker-compose -f docker-compose.varalabs.yml up -d
 ## Compose File Location
 
 ```
-/opt/tribenest/docker-compose.varalabs.yml
+/opt/tribenest/docker-compose.aristream.yml
 ```
 
 ---
 
 ## Cloudflare Tunnel
 
-- **Tunnel name:** `varalabs-tunnel`
+- **Tunnel name:** `aristream-tunnel`
 - **Tunnel ID:** `836973e3-99c5-4699-ad03-90cda6cd5f86`
 - **Config:** `/home/azureuser/.cloudflared/config.yml`
 - **Credentials:** `/home/azureuser/.cloudflared/836973e3-99c5-4699-ad03-90cda6cd5f86.json`
 - **Service:** `systemctl status cloudflared`
 
 DNS CNAMEs created automatically in Cloudflare:
-- `api.varalabs.systems` → tunnel
-- `admin.varalabs.systems` → tunnel
-- `assets.varalabs.systems` → tunnel
-- `media.varalabs.systems` → tunnel
+- `api.aristream.com` → tunnel
+- `admin.aristream.com` → tunnel
+- `assets.aristream.com` → tunnel
+- `media.aristream.com` → tunnel
 
 ---
 
@@ -114,18 +114,18 @@ docker logs tribenest-app -f
 ### Restart the app
 ```bash
 cd /opt/tribenest
-docker-compose -f docker-compose.varalabs.yml restart
+docker-compose -f docker-compose.aristream.yml restart
 ```
 
 ### Check tunnel health
 ```bash
-cloudflared tunnel info varalabs-tunnel
+cloudflared tunnel info aristream-tunnel
 sudo systemctl status cloudflared
 ```
 
 ### MinIO console
 Open in browser: `http://20.196.73.173:9003`
-Login: `varalabs` / `VaraMinio@12345678`
+Login: `aristream` / `AriStreamMinio@12345678`
 
 ---
 
@@ -143,11 +143,11 @@ Neither is sufficient. The VM-hosted approach has no bundle size limit and runs 
 
 | Hostname | Tunnel target | Served by |
 |---|---|---|
-| `varalabs.systems` | `http://localhost:80` | nginx → Next.js :3000 |
-| `www.varalabs.systems` | `http://localhost:80` | nginx → Next.js :3000 |
-| `api.varalabs.systems` | `http://localhost:80` | nginx → backend :8000 |
-| `admin.varalabs.systems` | `http://localhost:80` | nginx → backend :8000 |
-| `assets.varalabs.systems` | `http://localhost:9002` | tribenest-minio |
+| `aristream.com` | `http://localhost:80` | nginx → Next.js :3000 |
+| `www.aristream.com` | `http://localhost:80` | nginx → Next.js :3000 |
+| `api.aristream.com` | `http://localhost:80` | nginx → backend :8000 |
+| `admin.aristream.com` | `http://localhost:80` | nginx → backend :8000 |
+| `assets.aristream.com` | `http://localhost:9002` | tribenest-minio |
 
 All four tunnel connections are live and registered via `systemctl status cloudflared`.
 
@@ -156,8 +156,8 @@ All four tunnel connections are live and registered via `systemctl status cloudf
 The `next.config.js` `env` block sets these at build time from the container's environment:
 
 ```
-ROOT_DOMAIN=varalabs.systems       (from docker-compose.varalabs.yml ROOT_DOMAIN)
-API_URL=https://api.varalabs.systems (from docker-compose.varalabs.yml API_URL)
+ROOT_DOMAIN=aristream.com       (from docker-compose.aristream.yml ROOT_DOMAIN)
+API_URL=https://api.aristream.com (from docker-compose.aristream.yml API_URL)
 ```
 
 No separate env var configuration is needed — rebuilding the image picks up any changes.
@@ -172,9 +172,9 @@ No separate env var configuration is needed — rebuilding the image picks up an
    cd /opt/tribenest && git pull
    cd /opt/tribenest-patch
    docker pull ghcr.io/drenathan/tribenest:latest   # if upstream image changed
-   docker build -t tribenest:varalabs .
+   docker build -t tribenest:aristream .
    docker stop tribenest-app && docker rm tribenest-app
-   cd /opt/tribenest && docker-compose -f docker-compose.varalabs.yml up -d
+   cd /opt/tribenest && docker-compose -f docker-compose.aristream.yml up -d
    ```
 
 ## What to do when you update the frontend code
@@ -184,9 +184,9 @@ Frontend changes are deployed the same way as backend changes — rebuild the Do
 ```bash
 ssh azureuser@20.196.73.173
 cd /opt/tribenest && git pull
-cd /opt/tribenest-patch && docker build -t tribenest:varalabs .
+cd /opt/tribenest-patch && docker build -t tribenest:aristream .
 docker stop tribenest-app && docker rm tribenest-app
-cd /opt/tribenest && docker-compose -f docker-compose.varalabs.yml up -d
+cd /opt/tribenest && docker-compose -f docker-compose.aristream.yml up -d
 ```
 
 ---
@@ -194,4 +194,4 @@ cd /opt/tribenest && docker-compose -f docker-compose.varalabs.yml up -d
 ## Known Limitations
 
 - `pg_trgm` full-text search on posts/products is disabled (Azure PostgreSQL blocks the extension). Search features that use `gin_trgm_ops` will fall back to exact matching.
-- LiveKit (`media.varalabs.systems`) tunnel route exists but LiveKit is not yet installed on the VM.
+- LiveKit (`media.aristream.com`) tunnel route exists but LiveKit is not yet installed on the VM.

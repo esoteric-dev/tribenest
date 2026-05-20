@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[43527],{43527:(e,a,s)=>{s.r(a),s.d(a,{__iconNode:()=>t,default:()=>k});var h=s(53998);let t=[["path",{d:"M21 12v3a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h7",key:"tqtdkg"}],["path",{d:"M16 3h5v5",key:"1806ms"}],["path",{d:"m16 8 5-5",key:"15mbrl"}]],k=(0,h.A)("message-square-share",t)}}]);

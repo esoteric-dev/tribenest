@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[6898],{6898:(e,c,h)=>{h.r(c),h.d(c,{__iconNode:()=>t,default:()=>r});var k=h(53998);let t=[["rect",{width:"20",height:"12",x:"2",y:"6",rx:"2",key:"9lu3g6"}],["circle",{cx:"12",cy:"12",r:"2",key:"1c9p78"}],["path",{d:"M6 12h.01M18 12h.01",key:"113zkx"}]],r=(0,k.A)("banknote",t)}}]);

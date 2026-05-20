@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[40254],{40254:(e,t,l)=>{l.r(t),l.d(t,{__iconNode:()=>s,default:()=>u});var p=l(53998);let s=[["polyline",{points:"15 14 20 9 15 4",key:"1tbx3s"}],["path",{d:"M4 20v-7a4 4 0 0 1 4-4h12",key:"1lu4f8"}]],u=(0,p.A)("corner-up-right",s)}}]);
